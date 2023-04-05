@@ -1,0 +1,8 @@
+[package]
+name = "ccdi-test"
+version = "0.1.0"
+authors = ["vchvatal"]
+edition = "2021"
+
+[dependencies]
+ccdi-driver-moravian = { path = "../ccdi-driver-moravian" }
