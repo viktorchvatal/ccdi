@@ -6,11 +6,16 @@ use std::path::PathBuf;
 
 use bindgen::CargoCallbacks;
 
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+const LIB_PATH: &str = "bin/x86_64";
+
+#[cfg(all(target_os = "linux", target_arch = "armv7"))]
+const LIB_PATH: &str = "bin/armv7";
+
 fn main() {
     // This is the directory where the `c` library is located.
-    let libdir_path = PathBuf::from("bin/x86_64")
-        // Canonicalize the path as `rustc-link-search` requires an absolute
-        // path.
+    // Canonicalize the path as `rustc-link-search` requires an absolute path.
+    let libdir_path = PathBuf::from(LIB_PATH)
         .canonicalize()
         .expect("cannot canonicalize path");
 
