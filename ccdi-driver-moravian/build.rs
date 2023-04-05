@@ -9,7 +9,7 @@ use bindgen::CargoCallbacks;
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 const LIB_PATH: &str = "bin/x86_64";
 
-#[cfg(all(target_os = "linux", target_arch = "armv7"))]
+#[cfg(all(target_os = "linux", target_arch = "arm"))]
 const LIB_PATH: &str = "bin/armv7";
 
 fn main() {

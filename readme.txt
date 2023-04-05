@@ -1,3 +1,9 @@
+# Installing bindgen dependencies
+
+`apt install llvm-dev libclang-dev clang`
+
+# Enabling permissions for moravian camera
+
 [gxccd] error: my_libusb_open(): libusb_open failed: -3, LIBUSB_ERROR_ACCESS
 
 $ lsusb | grep Moravian
