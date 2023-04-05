@@ -1,4 +1,4 @@
-use ccdi_driver_moravian::{get_any_camera_id, connect_usb_camera, CameraError, Camera};
+use ccdi_driver_moravian::{get_any_camera_id, connect_usb_camera, CameraError, CameraDriver};
 
 
 fn main() -> Result<(), String> {
@@ -12,10 +12,10 @@ fn main() -> Result<(), String> {
     Ok(())
 }
 
-fn print_camera_info(camera: &Camera) -> Result<(), CameraError> {
-    if let Ok(value) = camera.chip_temperature() {
-        println!("Chip temperature: {}", value);
-    }
+fn print_camera_info(camera: &CameraDriver) -> Result<(), CameraError> {
+    println!("Chip temperature: {}", camera.read_chip_temperature()?);
+    println!("Supply voltage: {}", camera.read_supply_voltage()?);
+    println!("Resolution: {} x {}", camera.read_chip_width()?, camera.read_chip_height()?);
 
     Ok(())
 }
