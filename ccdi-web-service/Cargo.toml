@@ -1,0 +1,11 @@
+[package]
+name = "ccdi-web-service"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = {version = "1.4.0", features = ["rt", "rt-multi-thread", "macros"]}
+warp = "0.3.4"
+futures = "0.3.28"
+log = "0.4.17"
+simplelog = "0.12.0"
