@@ -1,14 +1,12 @@
 use std::{thread::{self, JoinHandle}};
 use std::sync::mpsc::{Sender, Receiver};
 
-use crate::{WebServerMessage, WebClientMessage};
-
 pub fn start_server_thread(
-    server_rx: Receiver<WebServerMessage>,
-    clients_tx: Sender<WebClientMessage>,
+    server_rx: Receiver<String>,
+    clients_tx: Sender<String>,
 ) -> Result<JoinHandle<()>, String> {
     thread::Builder::new()
-        .name("algorithm".to_string())
+        .name("server".to_string())
         .spawn(move || {
             loop {
                 match server_rx.recv() {

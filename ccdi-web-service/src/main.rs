@@ -18,34 +18,39 @@ use websocket::ClientSharedState;
 use websocket::Clients;
 use websocket::handle_client_connection;
 use websocket::start_async_to_sync_channels_thread;
+use websocket::start_single_async_to_multiple_clients_sender;
+use websocket::start_sync_to_async_clients_sender;
 
 const INDEX: &str = include_str!("static/index.html");
 
-type WebClientMessage = String;
-type WebServerMessage = String;
-
 fn main() {
 
-    let (server_tx, server_rx) = std::sync::mpsc::channel::<WebServerMessage>();
-    let (clients_tx, clients_rx) = std::sync::mpsc::channel::<WebServerMessage>();
+    let (server_tx, server_rx) = std::sync::mpsc::channel::<String>();
+    let (clients_tx, clients_rx) = std::sync::mpsc::channel::<String>();
     let server_thread = start_server_thread(server_rx, clients_tx);
 
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
         .unwrap()
-        .block_on(tokio_main(server_tx))
+        .block_on(tokio_main(server_tx, clients_rx))
 }
 
-async fn tokio_main(sync_server_tx: std::sync::mpsc::Sender<WebServerMessage>) {
+async fn tokio_main(
+    sync_server_tx: std::sync::mpsc::Sender<String>,
+    sync_clients_rx: std::sync::mpsc::Receiver<String>,
+) {
     init_logger();
 
-    let (ws_from_client_tx, ws_from_client_rx) = mpsc::channel::<WebServerMessage>(10);
+    let (ws_from_client_tx, ws_from_client_rx) = mpsc::unbounded_channel::<String>();
+    let (async_clients_tx, async_clients_rx) = mpsc::unbounded_channel::<String>();
     // let server_tx = Arc::new(server_tx);
 
     let clients = Arc::new(RwLock::new(ClientSharedState::new(ws_from_client_tx)));
 
     start_async_to_sync_channels_thread(ws_from_client_rx, sync_server_tx);
+    start_single_async_to_multiple_clients_sender(clients.clone(), async_clients_rx);
+    let _thread = start_sync_to_async_clients_sender(sync_clients_rx, async_clients_tx);
 
     let websocket_service = warp::path("ccdi")
         .and(warp::ws())
