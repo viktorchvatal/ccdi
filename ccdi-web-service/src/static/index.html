@@ -4,7 +4,7 @@
         Index
         <script>
             window.onload = () => {
-                const BACKEND_URL = "ws://" + window.location.hostname + ":8080/echo"
+                const BACKEND_URL = "ws://" + window.location.hostname + ":8080/ccdi"
                 const socket = new WebSocket(BACKEND_URL)
                 socket.onopen = () =>  {
                     console.log("Socket Opened")
