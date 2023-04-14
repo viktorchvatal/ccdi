@@ -37,7 +37,7 @@ async fn tokio_main(sync_server_tx: std::sync::mpsc::Sender<WebServerMessage>) {
     init_logger();
 
     let (server_tx, mut server_rx) = mpsc::channel::<WebServerMessage>(10);
-    let server_tx = Arc::new(server_tx);
+    // let server_tx = Arc::new(server_tx);
 
     tokio::spawn(async move {
         while let Some(message) = server_rx.recv().await {
@@ -62,21 +62,21 @@ async fn tokio_main(sync_server_tx: std::sync::mpsc::Sender<WebServerMessage>) {
 }
 
 fn with_server_tx(
-    server_tx: Arc<Sender<WebServerMessage>>
-) -> impl Filter<Extract = (Arc<Sender<WebServerMessage>>,), Error = Infallible> + Clone {
+    server_tx: Sender<WebServerMessage>
+) -> impl Filter<Extract = (Sender<WebServerMessage>,), Error = Infallible> + Clone {
     warp::any().map(move || server_tx.clone())
 }
 
 pub async fn ws_handler(
     ws: warp::ws::Ws,
-    server_tx: Arc<Sender<WebServerMessage>>
+    server_tx: Sender<WebServerMessage>
 ) -> Result<impl Reply, Rejection> {
     Ok(ws.on_upgrade(move |socket| handle_client_connection(socket, server_tx)))
 }
 
 pub async fn handle_client_connection(
     websocket: WebSocket,
-    server_tx: Arc<Sender<WebServerMessage>>
+    server_tx: Sender<WebServerMessage>
 ) {
     ::log::info!("Websocket client connected");
     let (tx, mut rx) = websocket.split();

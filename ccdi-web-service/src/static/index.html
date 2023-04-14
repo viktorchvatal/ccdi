@@ -10,7 +10,7 @@
                     console.log("Socket Opened")
                     setInterval(_ => socket.send("Hello rust!"), 3000)
                 }
-                socket.onmessage = (msg) => alert(msg.data)
+                socket.onmessage = (msg) => console.log(msg.data)
                 socket.onerror = (err) => console.error(err)
                 socket.onclose = () => console.log("Socket Closed")
             }
