@@ -39,6 +39,10 @@ impl ImagerDevice for DemoImagerDevice {
             other: list_demo_properties(&self)
         })
     }
+
+    fn close(&mut self) {
+
+    }
 }
 
 fn list_demo_properties(device: &DemoImagerDevice) -> Vec<DeviceProperty> {

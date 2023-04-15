@@ -7,16 +7,10 @@ use super::*;
 /// parent using properties.
 pub struct StatusBar;
 
-#[derive(Copy, Clone, Eq, PartialEq)]
-pub enum ConnectionState {
-    Disconnected,
-    Connecting,
-    Established
-}
-
 #[derive(Clone, Eq, PartialEq, Properties)]
 pub struct StatusBarData {
     pub connection: ConnectionState,
+    pub logic: LogicStatus,
 }
 
 impl Component for StatusBar {
@@ -29,8 +23,9 @@ impl Component for StatusBar {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
-            <div class="status-bar-body">
-                { connection_state(ctx.props().connection) }
+            <div class="status-bar-body float-container">
+                { state_view("Connection", ctx.props().connection) }
+                { state_view("Camera", ctx.props().logic.camera) }
             </div>
         }
     }
@@ -38,12 +33,12 @@ impl Component for StatusBar {
 
 // =========================================== PRIVATE =============================================
 
-fn connection_state(state: ConnectionState) -> Html {
+fn state_view(name: &str, state: ConnectionState) -> Html {
     let status_class = status_to_class(state);
 
     html! {
-        <ul>
-            <li class={classes!("status", status_class)}>{"Connection"}</li>
+        <ul class="float-child">
+            <li class={classes!("status", status_class)}>{name}</li>
         </ul>
     }
 }

@@ -1,18 +1,18 @@
-use ccdi_common::{ClientMessage, StateMessage, ViewState};
+use ccdi_common::{ClientMessage, StateMessage, ViewState, LogicStatus};
 use ccdi_imager_demo::DemoImagerDriver;
 
-use crate::camera::CameraState;
+use crate::camera::CameraController;
 
 // ============================================ PUBLIC =============================================
 
 pub struct State {
-    camera: CameraState
+    camera: CameraController
 }
 
 impl State {
     pub fn new() -> Self {
         Self {
-            camera: CameraState::new(
+            camera: CameraController::new(
                 Box::new(DemoImagerDriver::new())
             )
         }
@@ -33,7 +33,8 @@ impl State {
 
     /// Called periodically to perform any tasks needed and return messages for clients
     pub fn periodic(&mut self) -> Result<Vec<ClientMessage>, String> {
-        Ok(vec![])
+        self.camera.periodic();
+        Ok(vec![ClientMessage::View(self.get_view()),])
     }
 }
 
@@ -42,7 +43,11 @@ impl State {
 impl State {
     fn get_view(&self) -> ViewState {
         ViewState {
-            header: format!("Initial view")
+            detail: self.camera.detail(),
+            status: LogicStatus {
+                camera: self.camera.connection_state(),
+            },
+            camera_properties: self.camera.properties(),
         }
     }
 }

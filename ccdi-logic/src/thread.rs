@@ -15,9 +15,9 @@ pub fn start_logic_thread(
     thread::Builder::new()
         .name("server".to_string())
         .spawn(move || {
-            loop {
-                let mut state = State::new();
+            let mut state = State::new();
 
+            loop {
                 match server_rx.recv_timeout(Duration::from_millis(500)) {
                     // Process the received message
                     Ok(message) => receive_message(&mut state, message, &clients_tx),

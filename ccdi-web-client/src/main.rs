@@ -1,8 +1,7 @@
 mod status_bar;
 
 use anyhow::Error;
-use ccdi_common::{ClientMessage, StateMessage};
-use status_bar::ConnectionState;
+use ccdi_common::{ClientMessage, StateMessage, ConnectionState, ViewState, LogicStatus};
 use yew_websocket::macros::Json;
 use gloo::console;
 use gloo::timers::callback::Interval;
@@ -37,27 +36,14 @@ impl From<WsAction> for Msg {
 
 pub struct Model {
     pub fetching: bool,
-    pub data: String,
     pub jpeg_image: Option<Vec<u8>>,
     pub ws: Option<WebSocketTask>,
     pub connection: ConnectionState,
+    pub view_state: Option<ViewState>,
     _interval: Interval,
 }
 
 impl Model {
-    fn view_data(&self) -> Html {
-        let data_label = match self.data.is_empty() {
-            true => "Data hasn't fetched yet.",
-            false => self.data.as_str(),
-        };
-
-        html! {
-            <div>
-                <p>{ data_label }</p>
-            </div>
-        }
-    }
-
     fn image_data(&self) -> Html {
         match self.jpeg_image {
             None => html! { },
@@ -70,11 +56,15 @@ impl Model {
     fn receive_message(&mut self, message: ClientMessage) -> bool {
         match message {
             ClientMessage::ClientTestResponse(_) => todo!(),
-            ClientMessage::View(view) => self.data = format!("{:?}", view),
+            ClientMessage::View(view) => self.view_state = Some(view),
             ClientMessage::JpegImage(image) => self.jpeg_image = Some(image),
         }
 
         true
+    }
+
+    fn get_logic_status(&self) -> LogicStatus {
+        self.view_state.as_ref().map(|state| state.status).unwrap_or(Default::default())
     }
 }
 
@@ -88,10 +78,10 @@ impl Component for Model {
 
         Self {
             fetching: false,
-            data: String::new(),
             ws: None,
             jpeg_image: None,
             connection: ConnectionState::Disconnected,
+            view_state: None,
             _interval: interval
         }
     }
@@ -163,9 +153,8 @@ impl Component for Model {
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <div>
-                <StatusBar connection={self.connection} />
+                <StatusBar connection={self.connection} logic={self.get_logic_status()}/>
                 <nav class="menu">
-                    { self.view_data() }
                     { self.image_data() }
                 </nav>
             </div>

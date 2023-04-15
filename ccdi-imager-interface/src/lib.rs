@@ -15,6 +15,7 @@ pub struct DeviceDescriptor {
 
 pub trait ImagerDevice {
     fn read_properties(&mut self) -> Result<ImagerProperties, String>;
+    fn close(&mut self);
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]

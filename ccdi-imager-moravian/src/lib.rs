@@ -50,6 +50,10 @@ impl ImagerDevice for MoravianImagerDevice {
             other: read_all_properties(&self.device).map_err(to_string)?
         })
     }
+
+    fn close(&mut self) {
+
+    }
 }
 
 fn read_all_properties(device: &CameraDriver) -> Result<Vec<DeviceProperty>, CameraError> {
