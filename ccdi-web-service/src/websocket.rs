@@ -1,4 +1,4 @@
-use ccdi_common::{log_err, to_string};
+use ccdi_common::{log_err, to_string, StateMessage, ClientMessage};
 use log::*;
 use std::collections::HashMap;
 use std::convert::Infallible;
@@ -17,29 +17,31 @@ pub type Clients = Arc<RwLock<ClientSharedState>>;
 
 pub struct ClientSharedState {
     counter: usize,
-    server_tx: UnboundedSender<String>,
+    server_tx: UnboundedSender<StateMessage>,
     transmitters: HashMap<usize, UnboundedSender<Result<Message, Error>>>
 }
 
 pub fn start_single_async_to_multiple_clients_sender(
     clients: Clients,
-    mut async_clients_rx: tokio::sync::mpsc::UnboundedReceiver<String>
+    mut async_clients_rx: tokio::sync::mpsc::UnboundedReceiver<ClientMessage>
 ) {
     tokio::spawn(async move {
         loop {
             if let Some(message) = async_clients_rx.recv().await {
-                for transmitter in clients.read().await.transmitters.values() {
-                    log_err(
-                        "Send message to client channel",
-                        transmitter.send(Ok(Message::text(message.clone())))
-                    );
+                if let Ok(json_string) = serde_json::to_string(&message) {
+                    for transmitter in clients.read().await.transmitters.values() {
+                        log_err(
+                            "Send message to client channel",
+                            transmitter.send(Ok(Message::text(json_string.clone())))
+                        );
+                    }
                 }
             }
         }
     });
 }
 
-pub fn create_clients(ws_from_client_tx: UnboundedSender<String>) -> Clients {
+pub fn create_clients(ws_from_client_tx: UnboundedSender<StateMessage>) -> Clients {
     Arc::new(RwLock::new(ClientSharedState::new(ws_from_client_tx)))
 }
 
@@ -98,22 +100,22 @@ async fn handle_client_connection(
 
 async fn process_message(
     message: Message,
-    server_tx: &UnboundedSender<String>,
+    server_tx: &UnboundedSender<StateMessage>,
 ) -> Result<(), String> {
-    server_tx.send(convert_server_message(message)?).map_err(to_string)
+    server_tx.send(convert_state_message(message)?).map_err(to_string)
 }
 
-fn convert_server_message(message: Message) -> Result<String, String> {
+fn convert_state_message(message: Message) -> Result<StateMessage, String> {
     if message.is_text() {
-        String::from_utf8(message.into_bytes())
-            .map_err(|err| format!("{:?}", err))
+        let json_string = String::from_utf8(message.into_bytes()).map_err(to_string)?;
+        serde_json::from_str::<StateMessage>(&json_string).map_err(to_string)
     } else {
         Err(String::from("Msg is not text"))
     }
 }
 
 impl ClientSharedState {
-    fn new(server_tx: UnboundedSender<String>) -> Self {
+    fn new(server_tx: UnboundedSender<StateMessage>) -> Self {
         Self {
             counter: 0,
             server_tx,

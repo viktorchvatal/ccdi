@@ -1,14 +1,9 @@
 use anyhow::Error;
-use serde_derive::{Deserialize, Serialize};
+use ccdi_common::{ClientMessage, StateMessage};
 use yew_websocket::macros::Json;
 
 use yew::{html, Component, Context, Html};
 use yew_websocket::websocket::{WebSocketService, WebSocketStatus, WebSocketTask};
-
-pub enum Format {
-    Json,
-    Toml,
-}
 
 pub enum WsAction {
     Connect,
@@ -19,7 +14,7 @@ pub enum WsAction {
 
 pub enum Msg {
     WsAction(WsAction),
-    WsReady(Result<WsResponse, Error>),
+    WsReady(Result<ClientMessage, Error>),
 }
 
 impl From<WsAction> for Msg {
@@ -28,33 +23,21 @@ impl From<WsAction> for Msg {
     }
 }
 
-/// This type is used as a request which sent to websocket connection.
-#[derive(Serialize, Debug)]
-struct WsRequest {
-    value: u32,
-}
-
-/// This type is an expected response from a websocket connection.
-#[derive(Deserialize, Debug)]
-pub struct WsResponse {
-    value: u32,
-}
-
 pub struct Model {
     pub fetching: bool,
-    pub data: Option<u32>,
+    pub data: String,
     pub ws: Option<WebSocketTask>,
 }
 
 impl Model {
     fn view_data(&self) -> Html {
-        if let Some(value) = self.data {
+        if self.data.is_empty() {
             html! {
-                <p>{ value }</p>
+                <p>{ "Data hasn't fetched yet." }</p>
             }
         } else {
             html! {
-                <p>{ "Data hasn't fetched yet." }</p>
+                <p>{ self.data.as_str() }</p>
             }
         }
     }
@@ -67,7 +50,7 @@ impl Component for Model {
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
             fetching: false,
-            data: None,
+            data: String::new(),
             ws: None,
         }
     }
@@ -94,7 +77,7 @@ impl Component for Model {
                     true
                 }
                 WsAction::SendData => {
-                    let request = WsRequest { value: 321 };
+                    let request = StateMessage::ClientTest(321);
                     let json = serde_json::to_string(&request).unwrap();
                     self.ws.as_mut().unwrap().send(json);
                     false
@@ -109,7 +92,8 @@ impl Component for Model {
                 }
             },
             Msg::WsReady(response) => {
-                self.data = response.map(|data| data.value).ok();
+                self.data = response.map(|data| format!("{:?}", data))
+                    .unwrap_or(String::default());
                 true
             }
         }

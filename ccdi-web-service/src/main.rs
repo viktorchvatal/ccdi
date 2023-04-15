@@ -2,6 +2,8 @@ mod server;
 mod websocket;
 mod bridge;
 
+use ccdi_common::ClientMessage;
+use ccdi_common::StateMessage;
 use ccdi_common::init_logger;
 use tokio::sync::mpsc;
 
@@ -16,8 +18,8 @@ use bridge::start_std_to_tokio_channel_bridge;
 const INDEX: &str = include_str!("static/index.html");
 
 fn main() {
-    let (server_tx, server_rx) = std::sync::mpsc::channel::<String>();
-    let (clients_tx, clients_rx) = std::sync::mpsc::channel::<String>();
+    let (server_tx, server_rx) = std::sync::mpsc::channel::<StateMessage>();
+    let (clients_tx, clients_rx) = std::sync::mpsc::channel::<ClientMessage>();
     let server_thread = start_server_thread(server_rx, clients_tx);
 
     tokio::runtime::Builder::new_multi_thread()
@@ -28,13 +30,13 @@ fn main() {
 }
 
 async fn tokio_main(
-    sync_server_tx: std::sync::mpsc::Sender<String>,
-    sync_clients_rx: std::sync::mpsc::Receiver<String>,
+    sync_server_tx: std::sync::mpsc::Sender<StateMessage>,
+    sync_clients_rx: std::sync::mpsc::Receiver<ClientMessage>,
 ) {
     init_logger(true);
 
-    let (ws_from_client_tx, ws_from_client_rx) = mpsc::unbounded_channel::<String>();
-    let (async_clients_tx, async_clients_rx) = mpsc::unbounded_channel::<String>();
+    let (ws_from_client_tx, ws_from_client_rx) = mpsc::unbounded_channel::<StateMessage>();
+    let (async_clients_tx, async_clients_rx) = mpsc::unbounded_channel::<ClientMessage>();
     // let server_tx = Arc::new(server_tx);
 
     let clients = create_clients(ws_from_client_tx);
