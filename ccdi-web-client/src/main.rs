@@ -1,15 +1,22 @@
 use anyhow::Error;
 use ccdi_common::{ClientMessage, StateMessage};
 use yew_websocket::macros::Json;
-use gloo_timers::callback::Interval;
 use gloo::console;
+use gloo::timers::callback::Interval;
 
-use yew::{html, Component, Context, Html};
+use yew::{html, Component, Context, Html, classes};
 use yew_websocket::websocket::{WebSocketService, WebSocketStatus, WebSocketTask};
+
+pub enum ConnectedState {
+    Disconnected,
+    Connecting,
+    Established
+}
 
 pub enum WsAction {
     Connect,
-    SendData,
+    SendData(StateMessage),
+    Established,
     Disconnect,
     Lost,
 }
@@ -30,6 +37,7 @@ pub struct Model {
     pub fetching: bool,
     pub data: String,
     pub ws: Option<WebSocketTask>,
+    pub connected: ConnectedState,
     _interval: Interval,
 }
 
@@ -40,14 +48,17 @@ impl Model {
             false => self.data.as_str(),
         };
 
-        let status_label = match self.ws {
-            Some(_) => "Connected",
-            None => "Disconnected"
+        let (status_label, status_class) = match self.connected {
+            ConnectedState::Disconnected => ("Disconnected", "error"),
+            ConnectedState::Connecting => ("Connecting ...", "warn"),
+            ConnectedState::Established => ("Connected", "ok"),
         };
 
         html! {
             <div>
-                <p>{ status_label }</p>
+            <ul>
+                <li class={classes!("status", status_class)}>{status_label}</li>
+            </ul>
                 <p>{ data_label }</p>
             </div>
         }
@@ -60,12 +71,13 @@ impl Component for Model {
 
     fn create(ctx: &Context<Self>) -> Self {
         let callback = ctx.link().callback(|_| Msg::Tick);
-        let interval = Interval::new(200, move || callback.emit(()));
+        let interval = Interval::new(600, move || callback.emit(()));
 
         Self {
             fetching: false,
             data: String::new(),
             ws: None,
+            connected: ConnectedState::Disconnected,
             _interval: interval
         }
     }
@@ -74,39 +86,50 @@ impl Component for Model {
         match msg {
             Msg::Tick => {
                 if self.ws.is_none() {
-                    console::log!("Emitting WsAction::Connect");
-                    ctx.link().callback(|_| WsAction::Connect).emit(());
+                    ctx.link().send_message(WsAction::Connect);
                 }
                 false
             },
             Msg::WsAction(action) => match action {
                 WsAction::Connect => {
+                    let hostname = gloo::utils::window().location().hostname().ok()
+                        .unwrap_or(String::from("localhost"));
+
+                    let ws_url = format!("ws://{}:8081/ccdi", hostname);
+
+                    console::info!(&hostname, "WS: ", &ws_url);
                     let callback = ctx.link().callback(|Json(data)| Msg::WsReady(data));
                     let notification = ctx.link().batch_callback(|status| match status {
-                        WebSocketStatus::Opened => None,
+                        WebSocketStatus::Opened => Some(WsAction::Established.into()),
                         WebSocketStatus::Closed | WebSocketStatus::Error => {
                             Some(WsAction::Lost.into())
                         }
                     });
 
                     let task = WebSocketService::connect(
-                        "ws://127.0.0.1:8081/ccdi",
+                        &ws_url,
                         callback,
                         notification,
                     )
                     .unwrap();
                     self.ws = Some(task);
+                    self.connected = ConnectedState::Connecting;
                     true
                 }
-                WsAction::SendData => {
-                    let request = StateMessage::ClientTest(321);
-                    let json = serde_json::to_string(&request).unwrap();
+                WsAction::SendData(message) => {
+                    let json = serde_json::to_string(&message).unwrap();
                     self.ws.as_mut().unwrap().send(json);
                     false
                 }
                 WsAction::Disconnect => {
                     self.ws.take();
+                    self.connected = ConnectedState::Disconnected;
                     true
+                }
+                WsAction::Established => {
+                    ctx.link().send_message(WsAction::SendData(StateMessage::ClientConnected));
+                    self.connected = ConnectedState::Established;
+                    false
                 }
                 WsAction::Lost => {
                     self.ws = None;
@@ -131,7 +154,8 @@ impl Component for Model {
                         { "Connect To WebSocket" }
                     </button>
                     <button disabled={self.ws.is_none()}
-                            onclick={ctx.link().callback(|_| WsAction::SendData)}>
+                            onclick={ctx.link()
+                                .callback(|_| WsAction::SendData(StateMessage::ClientTest(321)))}>
                         { "Send To WebSocket" }
                     </button>
                     <button disabled={self.ws.is_none()}
