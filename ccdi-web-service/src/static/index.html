@@ -1,19 +1,14 @@
-<!DOCTYPE html>
-<html>
-    <body>
-        Index
-        <script>
-            window.onload = () => {
-                const BACKEND_URL = "ws://" + window.location.hostname + ":8080/ccdi"
-                const socket = new WebSocket(BACKEND_URL)
-                socket.onopen = () =>  {
-                    console.log("Socket Opened")
-                    setInterval(_ => socket.send("Hello rust!"), 3000)
-                }
-                socket.onmessage = (msg) => console.log(msg.data)
-                socket.onerror = (err) => console.error(err)
-                socket.onclose = () => console.log("Socket Closed")
-            }
-        </script>
-    </body>
-</html>
+
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="utf-8">
+    <title>Yew • Counter</title>
+
+    <script type="module">import init from '/ccdi-web-client.js';init('/ccdi-web-client.wasm');</script>
+    <link rel="stylesheet" href="/ccdi-web-client.css">
+
+<link rel="preload" href="/ccdi-web-client.wasm" as="fetch" type="application/wasm" crossorigin="">
+<link rel="modulepreload" href="/ccdi-web-client.js"></head>
+
+<body>
+
+</body></html>

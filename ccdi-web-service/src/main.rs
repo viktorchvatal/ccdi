@@ -14,7 +14,10 @@ use websocket::start_single_async_to_multiple_clients_sender;
 use bridge::start_tokio_to_std_channel_bridge;
 use bridge::start_std_to_tokio_channel_bridge;
 
-const INDEX: &str = include_str!("static/index.html");
+const INDEX: &[u8] = include_bytes!("static/index.html");
+const WASM: &[u8] = include_bytes!("static/ccdi-web-client.wasm");
+const JS: &[u8] = include_bytes!("static/ccdi-web-client.js");
+const CSS: &[u8] = include_bytes!("static/ccdi-web-client.css");
 
 fn main() {
     let (server_tx, server_rx) = std::sync::mpsc::channel::<StateMessage>();
@@ -45,8 +48,21 @@ async fn tokio_main(
     let _thread = start_std_to_tokio_channel_bridge(sync_clients_rx, async_clients_tx);
 
     let websocket_service = create_websocket_service("ccdi", clients);
+
     let index = warp::path::end().map(|| warp::reply::html(INDEX));
-    let routes = warp::get().and(websocket_service.or(index));
+
+    let wasm = warp::path("ccdi-web-client.wasm")
+        .map(|| warp::reply::with_header(WASM, "Content-Type", "application/wasm"));
+
+    let js = warp::path("ccdi-web-client.js")
+        .map(|| warp::reply::with_header(JS, "Content-Type", "text/javascript"));
+
+    let css = warp::path("ccdi-web-client.css")
+        .map(|| warp::reply::with_header(CSS, "Content-Type", "text/css"));
+
+    let routes = warp::get().and(
+        websocket_service.or(wasm).or(js).or(css).or(index)
+    );
 
     warp::serve(routes)
         .run(([0, 0, 0, 0], 8081)).await;
