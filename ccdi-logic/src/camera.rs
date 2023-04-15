@@ -57,7 +57,7 @@ impl CameraController {
 impl CameraController {
     fn set_detail(&mut self, detail: &str) {
         info!("Detail updated: {}", detail);
-        self.detail = String::from("Could not list devices");
+        self.detail = detail.to_owned();
     }
 
     fn handle_error_state(&mut self) -> State {

@@ -22,10 +22,12 @@ impl Component for StatusBar {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        let main_state = ctx.props().connection;
+
         html! {
             <div class="status-bar-body float-container">
-                { state_view("Connection", ctx.props().connection) }
-                { state_view("Camera", ctx.props().logic.camera) }
+                { state_view("Connection", main_state) }
+                { combined("Camera", main_state, ctx.props().logic.camera) }
             </div>
         }
     }
@@ -33,12 +35,23 @@ impl Component for StatusBar {
 
 // =========================================== PRIVATE =============================================
 
-fn state_view(name: &str, state: ConnectionState) -> Html {
-    let status_class = status_to_class(state);
+fn combined(name: &str, main: ConnectionState, state: ConnectionState) -> Html {
+    let status_class = match main {
+        ConnectionState::Established => status_to_class(state),
+        _other => "unknown"
+    };
 
+    state_html(name, status_class)
+}
+
+fn state_view(name: &str, state: ConnectionState) -> Html {
+    state_html(name, status_to_class(state))
+}
+
+fn state_html(name: &str, class: &'static str) -> Html {
     html! {
         <ul class="float-child">
-            <li class={classes!("status", status_class)}>{name}</li>
+            <li class={classes!("status", class)}>{name}</li>
         </ul>
     }
 }

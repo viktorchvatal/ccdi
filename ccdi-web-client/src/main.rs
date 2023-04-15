@@ -1,4 +1,5 @@
 mod status_bar;
+mod footer;
 
 use anyhow::Error;
 use ccdi_common::{ClientMessage, StateMessage, ConnectionState, ViewState, LogicStatus};
@@ -11,6 +12,7 @@ use yew::{html, Component, Context, Html, classes};
 use yew_websocket::websocket::{WebSocketService, WebSocketStatus, WebSocketTask};
 
 use crate::status_bar::StatusBar;
+use crate::footer::Footer;
 
 // ============================================ PUBLIC =============================================
 
@@ -152,12 +154,19 @@ impl Component for Model {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
-            <div>
-                <StatusBar connection={self.connection} logic={self.get_logic_status()}/>
-                <nav class="menu">
-                    { self.image_data() }
-                </nav>
-            </div>
+            <>
+                <div>
+                    <StatusBar connection={self.connection} logic={self.get_logic_status()}/>
+                    <nav class="menu">
+                        { self.image_data() }
+                    </nav>
+                </div>
+                <Footer text={
+                    self.view_state.as_ref()
+                        .map(|view| view.detail.clone())
+                        .unwrap_or(String::new())}
+                />
+            </>
         }
     }
 }

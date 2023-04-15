@@ -1,6 +1,11 @@
 body {
+  margin: 0;
+  padding: 0;
   background-color: black;
   color: white;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 button {
@@ -39,6 +44,12 @@ ul {
     box-shadow: 0px 0px 4px 1px #C9404D;
   }
 
+  &.unknown:before {
+    background-color: #AAAAAA;
+    border-color: #888888;
+    box-shadow: 0px 0px 4px 1px #AAAAAA;
+  }
+
   &:before {
     content: ' ';
     display: inline-block;
@@ -52,6 +63,7 @@ ul {
 
 .status-bar-body {
   border-bottom: 1px solid gray;
+  padding: 2px;
 }
 
 .float-container {
@@ -63,4 +75,10 @@ ul {
   float: left;
   padding-left: 5px;
   padding-right : 5px;
+}
+
+footer {
+  border-top: 1px solid gray;
+  margin-top: auto;
+  padding: 2px;
 }
