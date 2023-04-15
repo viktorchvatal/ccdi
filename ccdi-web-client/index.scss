@@ -1,3 +1,8 @@
+body {
+  background-color: black;
+  color: white;
+}
+
 button {
   background-color: #008f53; /* Green */
   border: 0;
@@ -43,4 +48,8 @@ ul {
     border: 1px solid #000;
     border-radius: 7px;
   }
+}
+
+.status-bar-body {
+  border-bottom: 1px solid gray;
 }

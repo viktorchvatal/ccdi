@@ -4,6 +4,8 @@ mod read;
 use crate::api::*;
 use read::*;
 
+// ============================================ PUBLIC =============================================
+
 pub struct CameraDriver {
     camera_ptr: *mut camera_t
 }

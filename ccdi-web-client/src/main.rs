@@ -1,5 +1,8 @@
+mod status_bar;
+
 use anyhow::Error;
 use ccdi_common::{ClientMessage, StateMessage};
+use status_bar::ConnectionState;
 use yew_websocket::macros::Json;
 use gloo::console;
 use gloo::timers::callback::Interval;
@@ -8,11 +11,9 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use yew::{html, Component, Context, Html, classes};
 use yew_websocket::websocket::{WebSocketService, WebSocketStatus, WebSocketTask};
 
-pub enum ConnectedState {
-    Disconnected,
-    Connecting,
-    Established
-}
+use crate::status_bar::StatusBar;
+
+// ============================================ PUBLIC =============================================
 
 pub enum WsAction {
     Connect,
@@ -39,7 +40,7 @@ pub struct Model {
     pub data: String,
     pub jpeg_image: Option<Vec<u8>>,
     pub ws: Option<WebSocketTask>,
-    pub connected: ConnectedState,
+    pub connection: ConnectionState,
     _interval: Interval,
 }
 
@@ -50,17 +51,8 @@ impl Model {
             false => self.data.as_str(),
         };
 
-        let (status_label, status_class) = match self.connected {
-            ConnectedState::Disconnected => ("Disconnected", "error"),
-            ConnectedState::Connecting => ("Connecting ...", "warn"),
-            ConnectedState::Established => ("Connected", "ok"),
-        };
-
         html! {
             <div>
-            <ul>
-                <li class={classes!("status", status_class)}>{status_label}</li>
-            </ul>
                 <p>{ data_label }</p>
             </div>
         }
@@ -99,7 +91,7 @@ impl Component for Model {
             data: String::new(),
             ws: None,
             jpeg_image: None,
-            connected: ConnectedState::Disconnected,
+            connection: ConnectionState::Disconnected,
             _interval: interval
         }
     }
@@ -135,7 +127,7 @@ impl Component for Model {
                     )
                     .unwrap();
                     self.ws = Some(task);
-                    self.connected = ConnectedState::Connecting;
+                    self.connection = ConnectionState::Connecting;
                     true
                 }
                 WsAction::SendData(message) => {
@@ -145,12 +137,12 @@ impl Component for Model {
                 }
                 WsAction::Disconnect => {
                     self.ws.take();
-                    self.connected = ConnectedState::Disconnected;
+                    self.connection = ConnectionState::Disconnected;
                     true
                 }
                 WsAction::Established => {
                     ctx.link().send_message(WsAction::SendData(StateMessage::ClientConnected));
-                    self.connected = ConnectedState::Established;
+                    self.connection = ConnectionState::Established;
                     false
                 }
                 WsAction::Lost => {
@@ -171,6 +163,7 @@ impl Component for Model {
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <div>
+                <StatusBar connection={self.connection} />
                 <nav class="menu">
                     { self.view_data() }
                     { self.image_data() }

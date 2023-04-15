@@ -1,15 +1,20 @@
 use ccdi_common::{ClientMessage, StateMessage, ViewState};
+use ccdi_imager_demo::DemoImagerDriver;
+
+use crate::camera::CameraState;
 
 // ============================================ PUBLIC =============================================
 
 pub struct State {
-
+    camera: CameraState
 }
 
 impl State {
     pub fn new() -> Self {
         Self {
-
+            camera: CameraState::new(
+                Box::new(DemoImagerDriver::new())
+            )
         }
     }
 

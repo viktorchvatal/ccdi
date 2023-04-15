@@ -1,0 +1,11 @@
+[package]
+name = "ccdi-imager-demo"
+version = "0.1.0"
+authors = ["vchvatal"]
+edition = "2021"
+
+[dependencies]
+log = "0.4.17"
+
+ccdi-imager-interface = { path = "../ccdi-imager-interface" }
+ccdi-common = { path = "../ccdi-common" }
