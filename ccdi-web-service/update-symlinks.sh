@@ -14,6 +14,10 @@ WASM_FILE_DST=$DST_DIR/ccdi-web-client.wasm
 JS_FILE_DST=$DST_DIR/ccdi-web-client.js
 CSS_FILE_DST=$DST_DIR/ccdi-web-client.css
 
+rm $WASM_FILE_DST
+rm $JS_FILE_DST
+rm $CSS_FILE_DST
+
 echo "Creating symlink $WASM_FILE_DST -> $WASM_FILE_SRC"
 ln -sr $WASM_FILE_SRC $WASM_FILE_DST
 echo "Creating symlink $JS_FILE_DST -> $JS_FILE_SRC"
