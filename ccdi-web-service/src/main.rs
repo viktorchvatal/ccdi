@@ -1,12 +1,10 @@
-mod logger;
 mod server;
 mod websocket;
 mod bridge;
 
-use std::fmt::Debug;
+use ccdi_common::init_logger;
 use tokio::sync::mpsc;
 
-use logger::init_logger;
 use server::start_server_thread;
 use warp::Filter;
 use websocket::create_clients;
@@ -33,7 +31,7 @@ async fn tokio_main(
     sync_server_tx: std::sync::mpsc::Sender<String>,
     sync_clients_rx: std::sync::mpsc::Receiver<String>,
 ) {
-    init_logger();
+    init_logger(true);
 
     let (ws_from_client_tx, ws_from_client_rx) = mpsc::unbounded_channel::<String>();
     let (async_clients_tx, async_clients_rx) = mpsc::unbounded_channel::<String>();
@@ -46,22 +44,9 @@ async fn tokio_main(
     let _thread = start_std_to_tokio_channel_bridge(sync_clients_rx, async_clients_tx);
 
     let websocket_service = create_websocket_service("ccdi", clients);
-
     let index = warp::path::end().map(|| warp::reply::html(INDEX));
-
     let routes = warp::get().and(websocket_service.or(index));
 
     warp::serve(routes)
         .run(([0, 0, 0, 0], 8080)).await;
 }
-
-fn to_string<T: Debug>(item: T) -> String {
-    format!("{:?}", item)
-}
-
-fn log_err(label: &str, result: Result<(), String>) {
-    if let Err(error) = result {
-        eprintln!("Error in '{}': {}", label, error)
-    }
-}
-

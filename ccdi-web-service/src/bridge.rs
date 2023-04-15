@@ -1,9 +1,9 @@
 use std::fmt::Debug;
+use ccdi_common::{log_err, to_string};
 use tokio::sync::mpsc::{UnboundedReceiver};
 use std::{thread::{self, JoinHandle}};
 
-use crate::log_err;
-use crate::to_string;
+// ============================================ PUBLIC =============================================
 
 pub fn start_std_to_tokio_channel_bridge<T: Debug + Send + 'static>(
     clients_rx: std::sync::mpsc::Receiver<T>,
@@ -17,7 +17,7 @@ pub fn start_std_to_tokio_channel_bridge<T: Debug + Send + 'static>(
                     Ok(message) => {
                         log_err(
                             "Clients sync to async transmitter",
-                            async_clients_tx.send(message).map_err(to_string)
+                            async_clients_tx.send(message)
                         )
                     },
                     Err(_) => return, // Channel closed, exit
@@ -35,7 +35,7 @@ pub fn start_tokio_to_std_channel_bridge<T: Debug + Send + 'static>(
         while let Some(message) = async_clients_rx.recv().await {
             log_err(
                 "Sending message to server worker thread",
-                sync_server_tx.send(message).map_err(to_string)
+                sync_server_tx.send(message)
             )
         }
     });

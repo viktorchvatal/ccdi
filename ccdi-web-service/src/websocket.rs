@@ -1,3 +1,4 @@
+use ccdi_common::{log_err, to_string};
 use log::*;
 use std::collections::HashMap;
 use std::convert::Infallible;
@@ -10,8 +11,7 @@ use futures::{StreamExt, FutureExt};
 use warp::{Error, Reply, Rejection, Filter};
 use warp::ws::{Message, WebSocket, Ws};
 
-use crate::log_err;
-use crate::to_string;
+// ============================================ PUBLIC =============================================
 
 pub type Clients = Arc<RwLock<ClientSharedState>>;
 
@@ -31,7 +31,7 @@ pub fn start_single_async_to_multiple_clients_sender(
                 for transmitter in clients.read().await.transmitters.values() {
                     log_err(
                         "Send message to client channel",
-                        transmitter.send(Ok(Message::text(message.clone()))).map_err(to_string)
+                        transmitter.send(Ok(Message::text(message.clone())))
                     );
                 }
             }
@@ -51,6 +51,8 @@ pub fn create_websocket_service(
         .and(with_clients(clients.clone()))
         .and_then(ws_handler)
 }
+
+// =========================================== PRIVATE =============================================
 
 async fn ws_handler(ws: Ws, clients: Clients) -> Result<impl Reply, Rejection> {
     Ok(ws.on_upgrade(move |socket| handle_client_connection(socket, clients)))
