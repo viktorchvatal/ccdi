@@ -4,6 +4,7 @@ use yew_websocket::macros::Json;
 use gloo::console;
 use gloo::timers::callback::Interval;
 
+use base64::{engine::general_purpose::STANDARD, Engine};
 use yew::{html, Component, Context, Html, classes};
 use yew_websocket::websocket::{WebSocketService, WebSocketStatus, WebSocketTask};
 
@@ -36,6 +37,7 @@ impl From<WsAction> for Msg {
 pub struct Model {
     pub fetching: bool,
     pub data: String,
+    pub jpeg_image: Option<Vec<u8>>,
     pub ws: Option<WebSocketTask>,
     pub connected: ConnectedState,
     _interval: Interval,
@@ -63,6 +65,25 @@ impl Model {
             </div>
         }
     }
+
+    fn image_data(&self) -> Html {
+        match self.jpeg_image {
+            None => html! { },
+            Some(ref data) => html! {
+                <img src={format!("data:image/jpeg;base64,{}", STANDARD.encode(&data))} />
+            }
+        }
+    }
+
+    fn receive_message(&mut self, message: ClientMessage) -> bool {
+        match message {
+            ClientMessage::ClientTestResponse(_) => todo!(),
+            ClientMessage::View(view) => self.data = format!("{:?}", view),
+            ClientMessage::JpegImage(image) => self.jpeg_image = Some(image),
+        }
+
+        true
+    }
 }
 
 impl Component for Model {
@@ -77,6 +98,7 @@ impl Component for Model {
             fetching: false,
             data: String::new(),
             ws: None,
+            jpeg_image: None,
             connected: ConnectedState::Disconnected,
             _interval: interval
         }
@@ -137,31 +159,21 @@ impl Component for Model {
                 }
             },
             Msg::WsReady(response) => {
-                self.data = response.map(|data| format!("{:?}", data))
-                    .unwrap_or(String::default());
-                true
+                if let Ok(message) = response {
+                    self.receive_message(message)
+                } else {
+                    false
+                }
             }
         }
     }
 
-    fn view(&self, ctx: &Context<Self>) -> Html {
+    fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <div>
                 <nav class="menu">
                     { self.view_data() }
-                    <button disabled={self.ws.is_some()}
-                            onclick={ctx.link().callback(|_| WsAction::Connect)}>
-                        { "Connect To WebSocket" }
-                    </button>
-                    <button disabled={self.ws.is_none()}
-                            onclick={ctx.link()
-                                .callback(|_| WsAction::SendData(StateMessage::ClientTest(321)))}>
-                        { "Send To WebSocket" }
-                    </button>
-                    <button disabled={self.ws.is_none()}
-                            onclick={ctx.link().callback(|_| WsAction::Disconnect)}>
-                        { "Close WebSocket connection" }
-                    </button>
+                    { self.image_data() }
                 </nav>
             </div>
         }

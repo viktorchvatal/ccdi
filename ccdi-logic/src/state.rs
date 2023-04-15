@@ -13,13 +13,22 @@ impl State {
         }
     }
 
+    /// Process incoming message and return messages to be sent to clients
     pub fn process(&mut self, message: StateMessage) -> Result<Vec<ClientMessage>, String> {
         use StateMessage::*;
 
         Ok(match message {
             ClientTest(number) => vec![ClientMessage::ClientTestResponse(number*2)],
-            ClientConnected => vec![ClientMessage::View(self.get_view())]
+            ClientConnected => vec![
+                ClientMessage::View(self.get_view()),
+                ClientMessage::JpegImage(TEST_IMAGE.to_vec()),
+            ]
         })
+    }
+
+    /// Called periodically to perform any tasks needed and return messages for clients
+    pub fn periodic(&mut self) -> Result<Vec<ClientMessage>, String> {
+        Ok(vec![])
     }
 }
 
@@ -32,3 +41,5 @@ impl State {
         }
     }
 }
+
+const TEST_IMAGE: &[u8] = include_bytes!("test-image.jpg");

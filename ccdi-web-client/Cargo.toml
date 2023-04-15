@@ -12,5 +12,6 @@ yew = { version = "0.20", features = ["csr"] }
 yew-websocket = "1.0.0"
 gloo = "0.8.0"
 gloo-timers = "0.2.6"
+base64 = "0.21.0"
 
 ccdi-common = { path = "../ccdi-common" }
