@@ -83,6 +83,7 @@ impl Component for Model {
                             Some(WsAction::Lost.into())
                         }
                     });
+
                     let task = WebSocketService::connect(
                         "ws://127.0.0.1:8081/ccdi",
                         callback,
