@@ -2,6 +2,8 @@
 
 `apt install libusb-1.0.0-dev llvm-dev libclang-dev clang`
 
+`cargo install --locked trunk`
+
 # Enabling permissions for moravian camera
 
 In case of the following error:
@@ -20,3 +22,7 @@ Reload UDEV rules and reconnect the device
  * `sudo udevadm control --reload-rules`
  * OR `sudo systemctl restart udev`
 
+# Running web service and web client
+
+`ccdi-web-service$ cargo run --release`
+`ccdi-web-client$ trunk serve --release --open`
