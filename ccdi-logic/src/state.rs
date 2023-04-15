@@ -1,4 +1,4 @@
-use ccdi_common::{ClientMessage, StateMessage};
+use ccdi_common::{ClientMessage, StateMessage, ViewState};
 
 // ============================================ PUBLIC =============================================
 
@@ -18,6 +18,17 @@ impl State {
 
         Ok(match message {
             ClientTest(number) => vec![ClientMessage::ClientTestResponse(number*2)],
+            ClientConnected => vec![ClientMessage::View(self.get_view())]
         })
+    }
+}
+
+// =========================================== PRIVATE =============================================
+
+impl State {
+    fn get_view(&self) -> ViewState {
+        ViewState {
+            header: format!("Initial view")
+        }
     }
 }

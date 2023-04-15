@@ -1,6 +1,8 @@
 use anyhow::Error;
 use ccdi_common::{ClientMessage, StateMessage};
 use yew_websocket::macros::Json;
+use gloo_timers::callback::Interval;
+use gloo::console;
 
 use yew::{html, Component, Context, Html};
 use yew_websocket::websocket::{WebSocketService, WebSocketStatus, WebSocketTask};
@@ -13,6 +15,7 @@ pub enum WsAction {
 }
 
 pub enum Msg {
+    Tick,
     WsAction(WsAction),
     WsReady(Result<ClientMessage, Error>),
 }
@@ -27,18 +30,26 @@ pub struct Model {
     pub fetching: bool,
     pub data: String,
     pub ws: Option<WebSocketTask>,
+    _interval: Interval,
 }
 
 impl Model {
     fn view_data(&self) -> Html {
-        if self.data.is_empty() {
-            html! {
-                <p>{ "Data hasn't fetched yet." }</p>
-            }
-        } else {
-            html! {
-                <p>{ self.data.as_str() }</p>
-            }
+        let data_label = match self.data.is_empty() {
+            true => "Data hasn't fetched yet.",
+            false => self.data.as_str(),
+        };
+
+        let status_label = match self.ws {
+            Some(_) => "Connected",
+            None => "Disconnected"
+        };
+
+        html! {
+            <div>
+                <p>{ status_label }</p>
+                <p>{ data_label }</p>
+            </div>
         }
     }
 }
@@ -47,16 +58,27 @@ impl Component for Model {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_ctx: &Context<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
+        let callback = ctx.link().callback(|_| Msg::Tick);
+        let interval = Interval::new(200, move || callback.emit(()));
+
         Self {
             fetching: false,
             data: String::new(),
             ws: None,
+            _interval: interval
         }
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
+            Msg::Tick => {
+                if self.ws.is_none() {
+                    console::log!("Emitting WsAction::Connect");
+                    ctx.link().callback(|_| WsAction::Connect).emit(());
+                }
+                false
+            },
             Msg::WsAction(action) => match action {
                 WsAction::Connect => {
                     let callback = ctx.link().callback(|Json(data)| Msg::WsReady(data));

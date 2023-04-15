@@ -4,4 +4,4 @@ mod messages;
 
 pub use helpers::{to_string, log_err};
 pub use logger::{init_logger};
-pub use messages::{ClientMessage, StateMessage};
+pub use messages::{ClientMessage, StateMessage, ViewState};

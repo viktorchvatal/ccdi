@@ -2,7 +2,7 @@ use std::{thread::{self, JoinHandle}};
 use std::sync::mpsc::{Sender, Receiver};
 
 use ccdi_common::{StateMessage, ClientMessage, log_err};
-use log::{info, debug};
+use log::{debug};
 
 use crate::state::State;
 
