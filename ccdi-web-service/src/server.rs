@@ -12,7 +12,7 @@ pub fn start_server_thread(
                 match server_rx.recv() {
                     Ok(message) => {
                         ::log::info!("Server thread received: {:?}", message);
-                        let _ = clients_tx.send(format!("Returned back: {}", message));
+                        let _ = clients_tx.send(String::from(r#"{"value":666}"#));
                     },
                     Err(_) => {
                         // Channel closed, exit
