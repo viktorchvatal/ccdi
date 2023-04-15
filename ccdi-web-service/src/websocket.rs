@@ -1,14 +1,14 @@
+use log::*;
 use std::collections::HashMap;
+use std::convert::Infallible;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tokio::sync::mpsc::{self, UnboundedSender, UnboundedReceiver};
+use tokio::sync::mpsc::{self, UnboundedSender};
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use std::{thread::{self, JoinHandle}};
 
 use futures::{StreamExt, FutureExt};
-use warp::Error;
-use warp::ws::Message;
-use warp::ws::WebSocket;
+use warp::{Error, Reply, Rejection, Filter};
+use warp::ws::{Message, WebSocket, Ws};
 
 use crate::log_err;
 use crate::to_string;
@@ -19,66 +19,6 @@ pub struct ClientSharedState {
     counter: usize,
     server_tx: UnboundedSender<String>,
     transmitters: HashMap<usize, UnboundedSender<Result<Message, Error>>>
-}
-
-impl ClientSharedState {
-    pub fn new(server_tx: UnboundedSender<String>) -> Self {
-        Self {
-            counter: 0,
-            server_tx,
-            transmitters: HashMap::new()
-        }
-    }
-
-    fn register_client(&mut self, transmitter: UnboundedSender<Result<Message, Error>>) -> usize {
-        let id = self.counter;
-        self.counter += 1;
-        self.transmitters.insert(id, transmitter);
-        ::log::info!("Client {} registered ({} clients total)", id, self.transmitters.len());
-        id
-    }
-
-    fn unregister_client(&mut self, id: usize) -> Result<(), String> {
-        self.transmitters.remove(&id);
-        ::log::info!("Client {} unregistered ({} clients total)", id, self.transmitters.len());
-        Ok(())
-    }
-}
-
-pub fn start_async_to_sync_channels_thread(
-    async_clients_rx: UnboundedReceiver<String>,
-    sync_server_tx: std::sync::mpsc::Sender<String>
-) {
-    tokio::spawn(async move {
-        bridge_async_client_channels_to_mspc_channels(
-            async_clients_rx, sync_server_tx
-        ).await;
-    });
-}
-
-pub fn start_sync_to_async_clients_sender(
-    clients_rx: std::sync::mpsc::Receiver<String>,
-    async_clients_tx: tokio::sync::mpsc::UnboundedSender<String>
-) -> Result<JoinHandle<()>, String> {
-    thread::Builder::new()
-        .name("server_to_tokio_transmitter".to_string())
-        .spawn(move || {
-            loop {
-                match clients_rx.recv() {
-                    Ok(message) => {
-                        log_err(
-                            "Clients sync to async transmitter",
-                            async_clients_tx.send(message).map_err(to_string)
-                        )
-                    },
-                    Err(_) => {
-                        // Channel closed, exit
-                        return;
-                    },
-                }
-            }
-        })
-        .map_err(|err| format!("{:?}", err))
 }
 
 pub fn start_single_async_to_multiple_clients_sender(
@@ -99,7 +39,28 @@ pub fn start_single_async_to_multiple_clients_sender(
     });
 }
 
-pub async fn handle_client_connection(
+pub fn create_clients(ws_from_client_tx: UnboundedSender<String>) -> Clients {
+    Arc::new(RwLock::new(ClientSharedState::new(ws_from_client_tx)))
+}
+
+pub fn create_websocket_service(
+    path: &str, clients: Clients
+) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone + '_ {
+    warp::path(path)
+        .and(warp::ws())
+        .and(with_clients(clients.clone()))
+        .and_then(ws_handler)
+}
+
+async fn ws_handler(ws: Ws, clients: Clients) -> Result<impl Reply, Rejection> {
+    Ok(ws.on_upgrade(move |socket| handle_client_connection(socket, clients)))
+}
+
+fn with_clients(clients: Clients) -> impl Filter<Extract = (Clients,), Error = Infallible> + Clone {
+    warp::any().map(move || clients.clone())
+}
+
+async fn handle_client_connection(
     websocket: WebSocket,
     clients: Clients
 ) {
@@ -133,18 +94,6 @@ pub async fn handle_client_connection(
     log_err("Unregister client", clients.write().await.unregister_client(id));
 }
 
-async fn bridge_async_client_channels_to_mspc_channels(
-    mut async_clients_rx: UnboundedReceiver<String>,
-    sync_server_tx: std::sync::mpsc::Sender<String>
-) {
-    while let Some(message) = async_clients_rx.recv().await {
-        log_err(
-            "Sending message to server worker thread",
-            sync_server_tx.send(message).map_err(to_string)
-        )
-    }
-}
-
 async fn process_message(
     message: Message,
     server_tx: &UnboundedSender<String>,
@@ -158,5 +107,29 @@ fn convert_server_message(message: Message) -> Result<String, String> {
             .map_err(|err| format!("{:?}", err))
     } else {
         Err(String::from("Msg is not text"))
+    }
+}
+
+impl ClientSharedState {
+    fn new(server_tx: UnboundedSender<String>) -> Self {
+        Self {
+            counter: 0,
+            server_tx,
+            transmitters: HashMap::new()
+        }
+    }
+
+    fn register_client(&mut self, transmitter: UnboundedSender<Result<Message, Error>>) -> usize {
+        let id = self.counter;
+        self.counter += 1;
+        self.transmitters.insert(id, transmitter);
+        info!("Client {} registered ({} clients total)", id, self.transmitters.len());
+        id
+    }
+
+    fn unregister_client(&mut self, id: usize) -> Result<(), String> {
+        self.transmitters.remove(&id);
+        info!("Client {} unregistered ({} clients total)", id, self.transmitters.len());
+        Ok(())
     }
 }
