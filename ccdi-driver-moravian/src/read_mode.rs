@@ -16,7 +16,7 @@ pub fn enumerate_read_modes(camera_ptr: *mut camera_t) -> Result<Vec<String>, Ca
                 camera_ptr,
                 index,
                 buffer.as_mut_ptr(),
-                buffer.len() as u64
+                to_length(buffer.len())
             )
         };
 
