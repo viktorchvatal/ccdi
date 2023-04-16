@@ -1,8 +1,10 @@
 mod api;
 mod read;
+mod read_mode;
 
 use crate::api::*;
 use read::*;
+use read_mode::enumerate_read_modes;
 
 // ============================================ PUBLIC =============================================
 
@@ -13,7 +15,8 @@ pub struct CameraDriver {
 /// Low level camera driver
 #[derive(Debug)]
 pub enum CameraError {
-    Unspecified
+    Unspecified,
+    UnableToConvertCString,
 }
 
 pub fn get_any_camera_id() -> Option<i32> {
@@ -45,4 +48,8 @@ impl CameraDriver {
     read_int_value_fn!(read_min_exposure, GIP_MINIMAL_EXPOSURE);
     read_int_value_fn!(read_max_exposure, GIP_MAXIMAL_EXPOSURE);
     read_int_value_fn!(read_max_gain, GIP_MAX_GAIN);
+
+    pub fn enumerate_read_modes(&self) -> Result<Vec<String>, CameraError> {
+        enumerate_read_modes(self.camera_ptr)
+    }
 }

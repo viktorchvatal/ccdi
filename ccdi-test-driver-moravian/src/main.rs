@@ -17,5 +17,9 @@ fn print_camera_info(camera: &CameraDriver) -> Result<(), CameraError> {
     println!("Supply voltage: {}", camera.read_supply_voltage()?);
     println!("Resolution: {} x {}", camera.read_chip_width()?, camera.read_chip_height()?);
 
+    for (index, mode) in camera.enumerate_read_modes()?.iter().enumerate() {
+        println!("Read mode {}: {}", index, mode)
+    }
+
     Ok(())
 }
