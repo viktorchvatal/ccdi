@@ -38,7 +38,7 @@ pub enum Msg {
 }
 
 pub enum UserAction {
-    MenuClick(MenuItem)
+    MenuClick(MenuItem),
 }
 
 impl From<WsAction> for Msg {
@@ -69,7 +69,6 @@ impl Model {
 
     fn receive_message(&mut self, message: ClientMessage) -> bool {
         match message {
-            ClientMessage::ClientTestResponse(_) => todo!(),
             ClientMessage::View(view) => self.view_state = Some(view),
             ClientMessage::JpegImage(image) => self.jpeg_image = Some(image),
         }
@@ -85,10 +84,13 @@ impl Model {
         self.view_state.as_ref().and_then(|state| mapper(state))
     }
 
-    fn render_tool(&self, _ctx: &Context<Self>) -> Html {
+    fn render_tool(&self, ctx: &Context<Self>) -> Html {
+        let action = ctx.link()
+            .callback(|action: StateMessage| Msg::WsAction(WsAction::SendData(action)));
+
         match self.selected_menu {
             MenuItem::Composition => html!{
-                <CompositionDetail />
+                <CompositionDetail on_action={action} />
             },
             MenuItem::Camera => html!{
                 <CameraDetail data={self.view_part(|state| state.camera_properties.clone())} />

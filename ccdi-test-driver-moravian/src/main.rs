@@ -1,3 +1,5 @@
+use std::{thread, time::Duration};
+
 use ccdi_driver_moravian::{get_any_camera_id, connect_usb_camera, CameraError, CameraDriver};
 
 
@@ -21,5 +23,19 @@ fn print_camera_info(camera: &CameraDriver) -> Result<(), CameraError> {
         println!("Read mode {}: {}", index, mode)
     }
 
+    let width = camera.read_chip_width()?;
+    let height = camera.read_chip_height()?;
+
+    camera.start_exposure(1.0, true, 0, 0, width, height)?;
+
+    while !(camera.image_ready()?) {
+        println!("Image not ready, waiting ...");
+        thread::sleep(Duration::from_millis(100));
+    }
+
+    println!("Starting image download");
+    let image_data = camera.read_image((width*height) as usize)?;
+    println!("Image downloaded, pixels: {}", image_data.len());
+    println!("Data: {:?}", image_data);
     Ok(())
 }

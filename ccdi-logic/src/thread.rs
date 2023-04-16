@@ -4,7 +4,7 @@ use std::sync::mpsc::{Sender, Receiver};
 use ccdi_common::{StateMessage, ClientMessage, log_err};
 use log::{debug};
 
-use crate::state::State;
+use crate::state::BackendState;
 
 // ============================================ PUBLIC =============================================
 
@@ -15,7 +15,7 @@ pub fn start_logic_thread(
     thread::Builder::new()
         .name("server".to_string())
         .spawn(move || {
-            let mut state = State::new();
+            let mut state = BackendState::new();
 
             loop {
                 match server_rx.recv_timeout(Duration::from_millis(100)) {
@@ -34,7 +34,7 @@ pub fn start_logic_thread(
 // =========================================== PRIVATE =============================================
 
 fn receive_message(
-    state: &mut State,
+    state: &mut BackendState,
     message: StateMessage,
     clients_tx: &Sender<ClientMessage>,
 ) {
@@ -46,7 +46,7 @@ fn receive_message(
 }
 
 fn periodic_tasks(
-    state: &mut State,
+    state: &mut BackendState,
     clients_tx: &Sender<ClientMessage>,
 ) {
     if let Some(responses) = log_err("Perform periodic tasks", state.periodic()) {

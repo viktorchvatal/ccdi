@@ -2,7 +2,7 @@ mod properties;
 mod exposure;
 mod connected;
 
-use ccdi_common::{ConnectionState, ViewState, LogicStatus};
+use ccdi_common::{ConnectionState, ViewState, LogicStatus, ExposureCommand};
 use ccdi_imager_interface::{ImagerDriver, DeviceDescriptor};
 use log::{info};
 
@@ -47,6 +47,13 @@ impl CameraController {
                 camera: self.connection_state(),
             },
             camera_properties: self.connected.as_ref().map(|cam| cam.get_properties()),
+        }
+    }
+
+    pub fn exposure_command(&mut self, command: ExposureCommand) {
+        match self.connected.as_mut() {
+            None => self.set_detail("Not connected - cannot handle exposure command"),
+            Some(connected) => connected.exposure_command(command)
         }
     }
 }

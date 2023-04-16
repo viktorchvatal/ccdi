@@ -1,6 +1,9 @@
 mod api;
 mod read;
 mod read_mode;
+mod image;
+
+use std::ffi::c_void;
 
 use crate::api::*;
 use read::*;
@@ -51,5 +54,36 @@ impl CameraDriver {
 
     pub fn enumerate_read_modes(&self) -> Result<Vec<String>, CameraError> {
         enumerate_read_modes(self.camera_ptr)
+    }
+
+    pub fn start_exposure(
+        &self, time: f64, use_shutter: bool, x: i32, y: i32, w: i32, h: i32
+    ) -> Result<(), CameraError> {
+        let result = unsafe {
+            gxccd_start_exposure(self.camera_ptr,  time, use_shutter, x, y, w, h)
+        };
+
+        if result == 0 { Ok(()) } else { Err(CameraError::Unspecified) }
+    }
+
+    pub fn image_ready(&self) -> Result<bool, CameraError> {
+        let mut image_ready: [bool; 1] = [false; 1];
+        let result = unsafe { gxccd_image_ready(self.camera_ptr, image_ready.as_mut_ptr()) };
+        if result == 0 { Ok(image_ready[0]) } else { Err(CameraError::Unspecified) }
+    }
+
+    pub fn read_image(&self, pixel_count: usize) -> Result<Vec<u16>, CameraError> {
+        let mut buffer = vec![0u16; pixel_count];
+
+        let result = unsafe {
+            gxccd_read_image(
+                self.camera_ptr, buffer.as_mut_ptr() as *mut c_void, 2*buffer.len() as u64
+            )
+        };
+        if result == 0 { Ok(buffer) } else { Err(CameraError::Unspecified) }
+    }
+
+    pub fn disconnect(self) {
+        unsafe { gxccd_release(self.camera_ptr); }
     }
 }

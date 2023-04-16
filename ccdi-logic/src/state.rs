@@ -1,14 +1,14 @@
-use ccdi_common::{ClientMessage, StateMessage};
+use ccdi_common::{ClientMessage, StateMessage, ExposureCommand};
 
 use crate::camera::CameraController;
 
 // ============================================ PUBLIC =============================================
 
-pub struct State {
+pub struct BackendState {
     camera: CameraController
 }
 
-impl State {
+impl BackendState {
     pub fn new() -> Self {
         Self {
             camera: CameraController::new(Box::new(
@@ -23,7 +23,10 @@ impl State {
         use StateMessage::*;
 
         Ok(match message {
-            ClientTest(number) => vec![ClientMessage::ClientTestResponse(number*2)],
+            ExposureMessage(command) => {
+                self.camera.exposure_command(command);
+                vec![]
+            },
             ClientConnected => vec![
                 ClientMessage::View(self.camera.get_view()),
                 ClientMessage::JpegImage(TEST_IMAGE.to_vec()),
@@ -38,7 +41,7 @@ impl State {
     }
 }
 
-impl Default for State {
+impl Default for BackendState {
     fn default() -> Self {
         Self::new()
     }
