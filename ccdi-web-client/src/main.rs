@@ -1,6 +1,7 @@
 mod status_bar;
 mod footer;
 mod menu;
+mod camera;
 
 use anyhow::Error;
 use ccdi_common::{ClientMessage, StateMessage, ConnectionState, ViewState, LogicStatus};
@@ -12,6 +13,7 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use yew::{html, Component, Context, Html, classes};
 use yew_websocket::websocket::{WebSocketService, WebSocketStatus, WebSocketTask};
 
+use crate::camera::CameraDetail;
 use crate::menu::{Menu, MenuItem};
 use crate::status_bar::StatusBar;
 use crate::footer::Footer;
@@ -74,6 +76,10 @@ impl Model {
 
     fn get_logic_status(&self) -> LogicStatus {
         self.view_state.as_ref().map(|state| state.status).unwrap_or(Default::default())
+    }
+
+    fn view_part<T, F: Fn(&ViewState) -> Option<T>>(&self, mapper: F) -> Option<T> {
+        self.view_state.as_ref().and_then(|state| mapper(state))
     }
 }
 
@@ -180,9 +186,14 @@ impl Component for Model {
             <>
                 <StatusBar connection={self.connection} logic={self.get_logic_status()}/>
                 <Menu clicked={menu_clicked} />
-                <nav class="menu">
-                    { self.image_data() }
-                </nav>
+                <div class="main-row">
+                    <div class="main-image-column">
+                        { self.image_data() }
+                    </div>
+                    <div class="main-tool-column">
+                        <CameraDetail data={self.view_part(|state| state.camera_properties.clone())} />
+                    </div>
+                </div>
                 <Footer text={
                     self.view_state.as_ref()
                         .map(|view| view.detail.clone())

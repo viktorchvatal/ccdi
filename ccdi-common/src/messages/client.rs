@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ccdi_imager_interface::ImagerProperties;
 use serde_derive::{Serialize, Deserialize};
 
@@ -14,7 +16,7 @@ pub enum ClientMessage {
 pub struct ViewState {
     pub detail: String,
     pub status: LogicStatus,
-    pub camera_properties: Option<ImagerProperties>
+    pub camera_properties: Option<Arc<ImagerProperties>>
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Serialize, Deserialize, Default)]

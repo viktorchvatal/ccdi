@@ -90,3 +90,33 @@ footer {
   margin-top: auto;
   padding: 2px;
 }
+
+.div-table {
+  display: table;
+  width: auto;
+  background-color: #222222;
+  border: 1px solid #666666;
+}
+.div-table-row {
+  display: table-row;
+  clear: both;
+}
+.div-table-col {
+  float: left;
+  display: table-cell;
+  width: 180px;
+  background-color: #333333;
+  padding: 2px;
+}
+
+.main-row {
+  display: flex;
+}
+
+.main-image-column {
+  flex: 50%;
+}
+
+.main-tool-column {
+  flex: 50%;
+}

@@ -1,5 +1,7 @@
 // ============================================ PUBLIC =============================================
 
+use std::sync::Arc;
+
 use ccdi_common::ConnectionState;
 use ccdi_imager_interface::{ImagerDriver, ImagerDevice, ImagerProperties};
 use log::{info, debug};
@@ -8,7 +10,7 @@ pub struct CameraController {
     driver: Box<dyn ImagerDriver>,
     device: Option<Box<dyn ImagerDevice>>,
     state: State,
-    properties: Option<ImagerProperties>,
+    properties: Option<Arc<ImagerProperties>>,
     detail: String,
 }
 
@@ -36,7 +38,7 @@ impl CameraController {
         }
     }
 
-    pub fn properties(&self) -> Option<ImagerProperties> {
+    pub fn properties(&self) -> Option<Arc<ImagerProperties>> {
         self.properties.clone()
     }
 
@@ -97,7 +99,7 @@ impl CameraController {
         if let Some(ref mut device) = self.device {
             match device.read_properties() {
                 Ok(properties) => {
-                    self.properties = Some(properties);
+                    self.properties = Some(Arc::new(properties));
                     self.set_detail("Camera properties loaded");
                     State::Connected
                 },

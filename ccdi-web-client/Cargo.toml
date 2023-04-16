@@ -15,3 +15,4 @@ gloo-timers = "0.2.6"
 base64 = "0.21.0"
 
 ccdi-common = { path = "../ccdi-common" }
+ccdi-imager-interface = { path = "../ccdi-imager-interface" }
