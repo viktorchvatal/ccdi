@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use ccdi_imager_interface::{
-    ImagerDriver, ImagerDevice, ImagerProperties, DeviceDescriptor, DeviceProperty
+    ImagerDriver, ImagerDevice, ImagerProperties, DeviceDescriptor, DeviceProperty, BasicProperties
 };
 
 // ============================================ PUBLIC =============================================
@@ -36,6 +36,10 @@ impl ImagerDevice for DemoImagerDevice {
     fn read_properties(&mut self) -> Result<ImagerProperties, String> {
         self.offset += 0.001;
         Ok(ImagerProperties {
+            basic: BasicProperties {
+                width: 3000,
+                height: 2000,
+            },
             other: list_demo_properties(&self)
         })
     }

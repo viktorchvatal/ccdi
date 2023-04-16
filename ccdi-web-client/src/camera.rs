@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use ccdi_imager_interface::{ImagerProperties, DeviceProperty};
+use ccdi_imager_interface::{ImagerProperties, DeviceProperty, BasicProperties};
 use yew::Properties;
 use super::*;
 
@@ -22,26 +22,47 @@ impl Component for CameraDetail {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        html!{
-            <div class="div-table">
-                {render_rows(ctx)}
-            </div>
+        match ctx.props().data.as_ref() {
+            Some(properties) => render_properties(properties.as_ref()),
+            None => render_missing(),
         }
     }
 }
 
-fn render_rows(ctx: &Context<CameraDetail>) -> Html {
-    ctx.props().data.as_ref().map(|properties| &properties.other).unwrap_or(&Vec::new())
-        .iter()
-        .map(|property| render_item(property))
-        .collect::<Html>()
+// =========================================== PRIVATE =============================================
+
+fn render_missing() -> Html {
+    html!{<div class="div-table">{render_row("No data", "...")}</div>}
+}
+
+fn render_properties(properties: &ImagerProperties) -> Html {
+    html!{
+        <div class="div-table">
+            {render_basic_rows(&properties.basic)}
+            {render_other_rows(properties)}
+        </div>
+    }
+}
+
+fn render_basic_rows(properties: &BasicProperties) -> Html {
+    html!{
+        {render_row("Resolution", &format!("{} x {}", properties.width, properties.height))}
+    }
+}
+
+fn render_other_rows(properties: &ImagerProperties) -> Html {
+    properties.other.iter().map(|property| render_item(property)).collect::<Html>()
 }
 
 fn render_item(property: &DeviceProperty) -> Html {
+    render_row(&property.name, &property.value)
+}
+
+fn render_row(name: &str, value: &str) -> Html {
     html! {
         <div class="div-table-row">
-            <div class="div-table-col">{&property.name}</div>
-            <div class="div-table-col">{&property.value}</div>
+            <div class="div-table-col">{name}</div>
+            <div class="div-table-col">{value}</div>
         </div>
     }
 }

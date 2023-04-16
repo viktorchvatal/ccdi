@@ -20,7 +20,14 @@ pub trait ImagerDevice {
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct ImagerProperties {
+    pub basic: BasicProperties,
     pub other: Vec<DeviceProperty>,
+}
+
+#[derive(Clone, Copy, PartialEq, Debug, Serialize, Deserialize)]
+pub struct BasicProperties {
+    pub width: usize,
+    pub height: usize,
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]

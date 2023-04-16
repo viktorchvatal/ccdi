@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use ccdi_common::to_string;
 use ccdi_driver_moravian::{get_any_camera_id, CameraDriver, connect_usb_camera, CameraError};
 use ccdi_imager_interface::{
-    ImagerDriver, ImagerDevice, ImagerProperties, DeviceDescriptor, DeviceProperty
+    ImagerDriver, ImagerDevice, ImagerProperties, DeviceDescriptor, DeviceProperty, BasicProperties
 };
 
 // ============================================ PUBLIC =============================================
@@ -47,6 +47,7 @@ pub struct MoravianImagerDevice {
 impl ImagerDevice for MoravianImagerDevice {
     fn read_properties(&mut self) -> Result<ImagerProperties, String> {
         Ok(ImagerProperties {
+            basic: read_basic_properties(&self.device).map_err(to_string)?,
             other: read_all_properties(&self.device).map_err(to_string)?
         })
     }
@@ -54,6 +55,13 @@ impl ImagerDevice for MoravianImagerDevice {
     fn close(&mut self) {
 
     }
+}
+
+fn read_basic_properties(device: &CameraDriver) -> Result<BasicProperties, CameraError> {
+    Ok(BasicProperties{
+        width: device.read_chip_width()? as usize,
+        height: device.read_chip_width()? as usize,
+    })
 }
 
 fn read_all_properties(device: &CameraDriver) -> Result<Vec<DeviceProperty>, CameraError> {
@@ -66,8 +74,6 @@ fn read_all_properties(device: &CameraDriver) -> Result<Vec<DeviceProperty>, Cam
         prop("Power Utilization", device.read_power_utilization()?),
         prop("ADC Gain", device.read_adc_gain()?),
         prop("Camera ID", device.read_camera_id()?),
-        prop("Camera Chip Width", device.read_chip_width()?),
-        prop("Camera Chip Height", device.read_chip_height()?),
         prop("Min Exposure Time", device.read_min_exposure()?),
         prop("Max Exposure Time", device.read_max_exposure()?),
         prop("Max Gain", device.read_max_gain()?),

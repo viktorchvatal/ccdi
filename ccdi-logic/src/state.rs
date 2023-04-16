@@ -1,4 +1,4 @@
-use ccdi_common::{ClientMessage, StateMessage, ViewState, LogicStatus};
+use ccdi_common::{ClientMessage, StateMessage};
 
 use crate::camera::CameraController;
 
@@ -25,7 +25,7 @@ impl State {
         Ok(match message {
             ClientTest(number) => vec![ClientMessage::ClientTestResponse(number*2)],
             ClientConnected => vec![
-                ClientMessage::View(self.get_view()),
+                ClientMessage::View(self.camera.get_view()),
                 ClientMessage::JpegImage(TEST_IMAGE.to_vec()),
             ]
         })
@@ -34,7 +34,7 @@ impl State {
     /// Called periodically to perform any tasks needed and return messages for clients
     pub fn periodic(&mut self) -> Result<Vec<ClientMessage>, String> {
         self.camera.periodic();
-        Ok(vec![ClientMessage::View(self.get_view()),])
+        Ok(vec![ClientMessage::View(self.camera.get_view()),])
     }
 }
 
@@ -45,17 +45,5 @@ impl Default for State {
 }
 
 // =========================================== PRIVATE =============================================
-
-impl State {
-    fn get_view(&self) -> ViewState {
-        ViewState {
-            detail: self.camera.detail(),
-            status: LogicStatus {
-                camera: self.camera.connection_state(),
-            },
-            camera_properties: self.camera.properties(),
-        }
-    }
-}
 
 const TEST_IMAGE: &[u8] = include_bytes!("test-image.jpg");
