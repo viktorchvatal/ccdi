@@ -1,5 +1,6 @@
 mod status_bar;
 mod footer;
+mod menu;
 
 use anyhow::Error;
 use ccdi_common::{ClientMessage, StateMessage, ConnectionState, ViewState, LogicStatus};
@@ -11,6 +12,7 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use yew::{html, Component, Context, Html, classes};
 use yew_websocket::websocket::{WebSocketService, WebSocketStatus, WebSocketTask};
 
+use crate::menu::{Menu, MenuItem};
 use crate::status_bar::StatusBar;
 use crate::footer::Footer;
 
@@ -28,6 +30,11 @@ pub enum Msg {
     Tick,
     WsAction(WsAction),
     WsReady(Result<ClientMessage, Error>),
+    Action(UserAction)
+}
+
+pub enum UserAction {
+    MenuClick(MenuItem)
 }
 
 impl From<WsAction> for Msg {
@@ -90,6 +97,14 @@ impl Component for Model {
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
+            Msg::Action(action) => {
+                match action {
+                    UserAction::MenuClick(menuitem) => {
+                        console::info!(format!("Menu clicked: {:?}", menuitem));
+                        false
+                    },
+                }
+            }
             Msg::Tick => {
                 if self.ws.is_none() {
                     ctx.link().send_message(WsAction::Connect);
@@ -112,19 +127,24 @@ impl Component for Model {
                         }
                     });
 
-                    let task = WebSocketService::connect(
+                    if let Ok(connection) = WebSocketService::connect(
                         &ws_url,
                         callback,
                         notification,
-                    )
-                    .unwrap();
-                    self.ws = Some(task);
-                    self.connection = ConnectionState::Connecting;
+                    ) {
+                        self.ws = Some(connection);
+                        self.connection = ConnectionState::Connecting;
+                    } else {
+                        console::error!("Failed to create web socket service");
+                    }
                     true
                 }
                 WsAction::SendData(message) => {
-                    let json = serde_json::to_string(&message).unwrap();
-                    self.ws.as_mut().unwrap().send(json);
+                    if let Ok(json) = serde_json::to_string(&message) {
+                        if let Some(ref mut ws) = self.ws {
+                            ws.send(json)
+                        }
+                    }
                     false
                 }
                 WsAction::Disconnect => {
@@ -152,15 +172,17 @@ impl Component for Model {
         }
     }
 
-    fn view(&self, _ctx: &Context<Self>) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let menu_clicked = ctx.link()
+            .callback(|action: MenuItem| Msg::Action(UserAction::MenuClick(action)));
+
         html! {
             <>
-                <div>
-                    <StatusBar connection={self.connection} logic={self.get_logic_status()}/>
-                    <nav class="menu">
-                        { self.image_data() }
-                    </nav>
-                </div>
+                <StatusBar connection={self.connection} logic={self.get_logic_status()}/>
+                <Menu clicked={menu_clicked} />
+                <nav class="menu">
+                    { self.image_data() }
+                </nav>
                 <Footer text={
                     self.view_state.as_ref()
                         .map(|view| view.detail.clone())

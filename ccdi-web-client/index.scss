@@ -9,14 +9,22 @@ body {
 }
 
 button {
-  background-color: #008f53; /* Green */
-  border: 0;
+  background-color: #000099;
+  border: 3px   solid #0000CC;
+  border-radius: .70rem;
   color: white;
-  padding: 14px 14px;
+  padding: 5px;
   text-align: center;
   font-size: 16px;
   margin: 2px 2px;
-  width: 100px;
+  width: 130px;
+  font-weight: bold;
+}
+
+button:hover {
+  background-color: #0000CC;
+  border: 3px solid #3333FF;
+  cursor: pointer;
 }
 
 ul {
@@ -62,7 +70,7 @@ ul {
 }
 
 .status-bar-body {
-  border-bottom: 1px solid gray;
+  border-bottom: 1px solid #111111;
   padding: 2px;
 }
 
