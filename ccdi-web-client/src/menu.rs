@@ -21,6 +21,7 @@ pub enum Msg {
 #[derive(Clone, PartialEq, Properties)]
 pub struct MenuData {
     pub clicked: Callback<MenuItem>,
+    pub selected: MenuItem
 }
 
 impl Component for Menu {

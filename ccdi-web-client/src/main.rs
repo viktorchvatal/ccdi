@@ -2,9 +2,11 @@ mod status_bar;
 mod footer;
 mod menu;
 mod camera;
+mod composition;
 
 use anyhow::Error;
 use ccdi_common::{ClientMessage, StateMessage, ConnectionState, ViewState, LogicStatus};
+use composition::CompositionDetail;
 use yew_websocket::macros::Json;
 use gloo::console;
 use gloo::timers::callback::Interval;
@@ -51,6 +53,7 @@ pub struct Model {
     pub ws: Option<WebSocketTask>,
     pub connection: ConnectionState,
     pub view_state: Option<ViewState>,
+    pub selected_menu: MenuItem,
     _interval: Interval,
 }
 
@@ -81,6 +84,17 @@ impl Model {
     fn view_part<T, F: Fn(&ViewState) -> Option<T>>(&self, mapper: F) -> Option<T> {
         self.view_state.as_ref().and_then(|state| mapper(state))
     }
+
+    fn render_tool(&self, ctx: &Context<Self>) -> Html {
+        match self.selected_menu {
+            MenuItem::Composition => html!{
+                <CompositionDetail />
+            },
+            MenuItem::Camera => html!{
+                <CameraDetail data={self.view_part(|state| state.camera_properties.clone())} />
+            },
+        }
+    }
 }
 
 impl Component for Model {
@@ -97,6 +111,7 @@ impl Component for Model {
             jpeg_image: None,
             connection: ConnectionState::Disconnected,
             view_state: None,
+            selected_menu: MenuItem::Camera,
             _interval: interval
         }
     }
@@ -106,8 +121,8 @@ impl Component for Model {
             Msg::Action(action) => {
                 match action {
                     UserAction::MenuClick(menuitem) => {
-                        console::info!(format!("Menu clicked: {:?}", menuitem));
-                        false
+                        self.selected_menu = menuitem;
+                        true
                     },
                 }
             }
@@ -185,13 +200,13 @@ impl Component for Model {
         html! {
             <>
                 <StatusBar connection={self.connection} logic={self.get_logic_status()}/>
-                <Menu clicked={menu_clicked} />
+                <Menu clicked={menu_clicked} selected={self.selected_menu} />
                 <div class="main-row">
                     <div class="main-image-column">
                         { self.image_data() }
                     </div>
                     <div class="main-tool-column">
-                        <CameraDetail data={self.view_part(|state| state.camera_properties.clone())} />
+                        { self.render_tool(ctx) }
                     </div>
                 </div>
                 <Footer text={

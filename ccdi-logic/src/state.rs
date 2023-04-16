@@ -1,5 +1,4 @@
 use ccdi_common::{ClientMessage, StateMessage, ViewState, LogicStatus};
-use ccdi_imager_demo::DemoImagerDriver;
 
 use crate::camera::CameraController;
 
@@ -12,9 +11,10 @@ pub struct State {
 impl State {
     pub fn new() -> Self {
         Self {
-            camera: CameraController::new(
-                Box::new(DemoImagerDriver::new())
-            )
+            camera: CameraController::new(Box::new(
+                ccdi_imager_demo::DemoImagerDriver::new()
+                // ccdi_imager_moravian::MoravianImagerDriver::new()
+            ))
         }
     }
 
@@ -35,6 +35,12 @@ impl State {
     pub fn periodic(&mut self) -> Result<Vec<ClientMessage>, String> {
         self.camera.periodic();
         Ok(vec![ClientMessage::View(self.get_view()),])
+    }
+}
+
+impl Default for State {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

@@ -59,7 +59,7 @@ fn state_html(name: &str, class: &'static str) -> Html {
 fn status_to_class(state: ConnectionState) -> &'static str {
     match state {
         ConnectionState::Disconnected => "error",
-        ConnectionState::Connecting => "warn",
+        ConnectionState::Connecting => "error", //"warn",
         ConnectionState::Established => "ok",
     }
 }
