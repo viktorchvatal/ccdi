@@ -1,2 +1,2 @@
-ccdi-driver-moravian/bin/* linguist-vendored=true
+ccdi-driver-moravian/bin/** linguist-vendored=true
 ccdi-web-service/src/static/* linguist-vendored=true
