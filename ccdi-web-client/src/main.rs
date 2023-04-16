@@ -6,6 +6,7 @@ mod composition;
 
 use anyhow::Error;
 use ccdi_common::{ClientMessage, StateMessage, ConnectionState, ViewState, LogicStatus};
+use ccdi_image::simple_raw_image_to_jpeg;
 use composition::CompositionDetail;
 use yew_websocket::macros::Json;
 use gloo::console;
@@ -75,6 +76,11 @@ impl Model {
                 let (w, h) = (image.params.area.width, image.params.area.height);
                 let mpix = w*h/1024/1024;
                 console::info!(&format!("Acquired {} x {} image with {} MPixels", w, h, mpix));
+
+                match simple_raw_image_to_jpeg(&image, 10) {
+                    Ok(jpeg) => self.jpeg_image = Some(jpeg),
+                    Err(error) => console::info!(&format!("Jpeg convert failed {}", error)),
+                }
             }
         }
 

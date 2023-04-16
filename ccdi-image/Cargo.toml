@@ -1,0 +1,13 @@
+[package]
+name = "ccdi-image"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+log = "0.4.17"
+ccdi-common = { path = "../ccdi-common" }
+
+[dependencies.image]
+version = "0.24.6"
+default-features = false
+features = ["jpeg"]

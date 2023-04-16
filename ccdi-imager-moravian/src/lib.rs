@@ -74,7 +74,7 @@ impl ImagerDevice for MoravianImagerDevice {
 fn read_basic_properties(device: &CameraDriver) -> Result<BasicProperties, CameraError> {
     Ok(BasicProperties{
         width: device.read_chip_width()? as usize,
-        height: device.read_chip_width()? as usize,
+        height: device.read_chip_height()? as usize,
     })
 }
 

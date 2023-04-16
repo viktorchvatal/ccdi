@@ -12,8 +12,8 @@ impl BackendState {
     pub fn new() -> Self {
         Self {
             camera: CameraController::new(Box::new(
-                ccdi_imager_demo::DemoImagerDriver::new()
-                // ccdi_imager_moravian::MoravianImagerDriver::new()
+                // ccdi_imager_demo::DemoImagerDriver::new()
+                ccdi_imager_moravian::MoravianImagerDriver::new()
             ))
         }
     }
