@@ -57,10 +57,12 @@ impl CameraDriver {
     }
 
     pub fn start_exposure(
-        &self, time: f64, use_shutter: bool, x: i32, y: i32, w: i32, h: i32
+        &self, time: f64, use_shutter: bool, x: usize, y: usize, w: usize, h: usize
     ) -> Result<(), CameraError> {
         let result = unsafe {
-            gxccd_start_exposure(self.camera_ptr,  time, use_shutter, x, y, w, h)
+            gxccd_start_exposure(
+                self.camera_ptr,  time, use_shutter, x as i32, y as i32, w as i32, h as i32
+            )
         };
 
         if result == 0 { Ok(()) } else { Err(CameraError::Unspecified) }
@@ -85,5 +87,10 @@ impl CameraDriver {
 
     pub fn disconnect(self) {
         unsafe { gxccd_release(self.camera_ptr); }
+    }
+
+    pub fn set_gain(&self, gain: u16) -> Result<(), CameraError> {
+        let result = unsafe { gxccd_set_gain(self.camera_ptr, gain) };
+        if result == 0 { Ok(()) } else { Err(CameraError::Unspecified) }
     }
 }

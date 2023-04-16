@@ -11,6 +11,6 @@ pub enum StateMessage {
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum ExposureCommand {
     Start,
-    SetGain(i32),
+    SetGain(u16),
     SetTime(f64),
 }

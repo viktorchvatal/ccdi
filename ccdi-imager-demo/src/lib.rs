@@ -1,7 +1,7 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, thread, time::Duration};
 
 use ccdi_imager_interface::{
-    ImagerDriver, ImagerDevice, ImagerProperties, DeviceDescriptor, DeviceProperty, BasicProperties
+    ImagerDriver, ImagerDevice, ImagerProperties, DeviceDescriptor, DeviceProperty, BasicProperties, ExposureParams
 };
 
 // ============================================ PUBLIC =============================================
@@ -46,6 +46,19 @@ impl ImagerDevice for DemoImagerDevice {
 
     fn close(&mut self) {
 
+    }
+
+    fn start_exposure(&mut self, _params: &ExposureParams) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn image_ready(&mut self, ) -> Result<bool, String> {
+        Ok(true)
+    }
+
+    fn download_image(&mut self, params: &ExposureParams) -> Result<Vec<u16>, String> {
+        thread::sleep(Duration::from_millis(1000));
+        Ok(vec![0; params.area.pixel_count()])
     }
 }
 

@@ -28,7 +28,7 @@ fn print_camera_info(camera: &CameraDriver) -> Result<(), CameraError> {
     let width = camera.read_chip_width()?;
     let height = camera.read_chip_height()?;
 
-    camera.start_exposure(0.1, true, 0, 0, width, height)?;
+    camera.start_exposure(0.1, true, 0, 0, width as usize, height as usize)?;
 
     while !(camera.image_ready()?) {
         println!("Image not ready, waiting ...");
@@ -56,10 +56,10 @@ fn save_fits_file(data: Vec<u16>, width: usize, height: usize, path: &str) -> Re
     };
 
     let mut fitsfile = FitsFile::create(&path)
-    .with_custom_primary(&description)
-    .overwrite()
-    .open()
-    .map_err(to_string)?;
+        .with_custom_primary(&description)
+        .overwrite()
+        .open()
+        .map_err(to_string)?;
 
     let hdu = fitsfile.primary_hdu().map_err(to_string)?;
     hdu.write_image(&mut fitsfile, &data).map_err(to_string)?;

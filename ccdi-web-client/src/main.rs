@@ -71,6 +71,11 @@ impl Model {
         match message {
             ClientMessage::View(view) => self.view_state = Some(view),
             ClientMessage::JpegImage(image) => self.jpeg_image = Some(image),
+            ClientMessage::RawImage(image) => {
+                let (w, h) = (image.params.area.width, image.params.area.height);
+                let mpix = w*h/1024/1024;
+                console::info!(&format!("Acquired {} x {} image with {} MPixels", w, h, mpix));
+            }
         }
 
         true

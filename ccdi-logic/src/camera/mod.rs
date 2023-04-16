@@ -2,7 +2,7 @@ mod properties;
 mod exposure;
 mod connected;
 
-use ccdi_common::{ConnectionState, ViewState, LogicStatus, ExposureCommand};
+use ccdi_common::{ConnectionState, ViewState, LogicStatus, ExposureCommand, ClientMessage};
 use ccdi_imager_interface::{ImagerDriver, DeviceDescriptor};
 use log::{info};
 
@@ -15,6 +15,7 @@ pub struct CameraController {
     state: State,
     detail: String,
     connected: Option<ConnectedCameraController>,
+    view: Option<ViewState>,
 }
 
 impl CameraController {
@@ -24,10 +25,11 @@ impl CameraController {
             state: State::Error,
             connected: None,
             detail: String::from("Started"),
+            view: None,
         }
     }
 
-    pub fn periodic(&mut self) {
+    pub fn periodic(&mut self) -> Vec<ClientMessage> {
         let old_state = self.state;
 
         self.state = match self.state {
@@ -38,6 +40,21 @@ impl CameraController {
         if self.state != old_state {
             info!("Camera state {:?} -> {:?}", old_state, self.state);
         }
+
+        let new_view = self.get_view();
+
+        let mut messages = vec![];
+
+        if self.view != Some(new_view.clone()) {
+            self.view = Some(new_view.clone());
+            messages.push(ClientMessage::View(new_view))
+        }
+
+        if let Some(ref mut camera) = self.connected {
+            messages.append(&mut camera.flush_messages());
+        }
+
+        messages
     }
 
     pub fn get_view(&self) -> ViewState {
@@ -45,6 +62,8 @@ impl CameraController {
             detail: self.detail.clone(),
             status: LogicStatus {
                 camera: self.connection_state(),
+                exposure: self.connected.as_ref().map(|cam| cam.exposure_status())
+                    .unwrap_or(ConnectionState::Disconnected)
             },
             camera_properties: self.connected.as_ref().map(|cam| cam.get_properties()),
         }
@@ -53,7 +72,12 @@ impl CameraController {
     pub fn exposure_command(&mut self, command: ExposureCommand) {
         match self.connected.as_mut() {
             None => self.set_detail("Not connected - cannot handle exposure command"),
-            Some(connected) => connected.exposure_command(command)
+            Some(connected) => match connected.exposure_command(command) {
+                Ok(_) => {},
+                Err(message) => self.set_detail(
+                    &format!("Exposure command failed: {}", message)
+                ),
+            }
         }
     }
 }

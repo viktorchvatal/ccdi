@@ -1,4 +1,4 @@
-use ccdi_common::{ClientMessage, StateMessage, ExposureCommand};
+use ccdi_common::{ClientMessage, StateMessage};
 
 use crate::camera::CameraController;
 
@@ -36,8 +36,7 @@ impl BackendState {
 
     /// Called periodically to perform any tasks needed and return messages for clients
     pub fn periodic(&mut self) -> Result<Vec<ClientMessage>, String> {
-        self.camera.periodic();
-        Ok(vec![ClientMessage::View(self.camera.get_view()),])
+        Ok(self.camera.periodic())
     }
 }
 

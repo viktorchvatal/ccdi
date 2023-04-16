@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use ccdi_common::to_string;
 use ccdi_driver_moravian::{get_any_camera_id, CameraDriver, connect_usb_camera, CameraError};
 use ccdi_imager_interface::{
-    ImagerDriver, ImagerDevice, ImagerProperties, DeviceDescriptor, DeviceProperty, BasicProperties
+    ImagerDriver, ImagerDevice, ImagerProperties, DeviceDescriptor, DeviceProperty, BasicProperties, ExposureParams
 };
 
 // ============================================ PUBLIC =============================================
@@ -54,6 +54,20 @@ impl ImagerDevice for MoravianImagerDevice {
 
     fn close(&mut self) {
 
+    }
+
+    fn start_exposure(&mut self, params: &ExposureParams) -> Result<(), String> {
+        self.device.set_gain(params.gain).map_err(to_string)?;
+        let (x, y, w, h) = params.area.into_tuple();
+        self.device.start_exposure(params.time, true, x, y, w, h).map_err(to_string)
+    }
+
+    fn image_ready(&mut self, ) -> Result<bool, String> {
+        self.device.image_ready().map_err(to_string)
+    }
+
+    fn download_image(&mut self, params: &ExposureParams) -> Result<Vec<u16>, String> {
+        self.device.read_image(params.area.pixel_count()).map_err(to_string)
     }
 }
 
