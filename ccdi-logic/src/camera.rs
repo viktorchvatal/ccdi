@@ -1,6 +1,6 @@
 // ============================================ PUBLIC =============================================
 
-use std::sync::Arc;
+use std::{sync::Arc, time::Instant};
 
 use ccdi_common::ConnectionState;
 use ccdi_imager_interface::{ImagerDriver, ImagerDevice, ImagerProperties};
@@ -12,6 +12,7 @@ pub struct CameraController {
     state: State,
     properties: Option<Arc<ImagerProperties>>,
     detail: String,
+    last_properties_read: Option<Instant>
 }
 
 impl CameraController {
@@ -21,7 +22,8 @@ impl CameraController {
             device: None,
             state: State::Error,
             properties: None,
-            detail: String::from("Started")
+            detail: String::from("Started"),
+            last_properties_read: None,
         }
     }
 
@@ -56,6 +58,8 @@ impl CameraController {
 
 // =========================================== PRIVATE =============================================
 
+const PROPERTIES_READ_INTERVAL: f64 = 2.0; // Seconds
+
 impl CameraController {
     fn set_detail(&mut self, detail: &str) {
         info!("Detail updated: {}", detail);
@@ -66,6 +70,7 @@ impl CameraController {
         if let Some(mut old_device) = self.device.take() {
             self.set_detail("Closing old device");
             old_device.close();
+            self.last_properties_read = None;
         }
 
         match self.driver.list_devices() {
@@ -96,11 +101,20 @@ impl CameraController {
     }
 
     fn handle_connected_state(&mut self) -> State {
+        if self.should_read_properties() {
+            self.connected_read_properties()
+        } else {
+            State::Connected
+        }
+    }
+
+    fn connected_read_properties(&mut self) -> State {
         if let Some(ref mut device) = self.device {
             match device.read_properties() {
                 Ok(properties) => {
                     self.properties = Some(Arc::new(properties));
                     self.set_detail("Camera properties loaded");
+                    self.last_properties_read = Some(Instant::now());
                     State::Connected
                 },
                 Err(_) => {
@@ -110,6 +124,15 @@ impl CameraController {
             }
         } else {
             State::Error
+        }
+    }
+
+    fn should_read_properties(&self) -> bool {
+        match self.last_properties_read {
+            None => true,
+            Some(last_time) => {
+                last_time.elapsed().as_secs_f64() >= PROPERTIES_READ_INTERVAL
+            }
         }
     }
 }

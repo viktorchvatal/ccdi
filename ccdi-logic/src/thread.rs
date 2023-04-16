@@ -18,7 +18,7 @@ pub fn start_logic_thread(
             let mut state = State::new();
 
             loop {
-                match server_rx.recv_timeout(Duration::from_millis(500)) {
+                match server_rx.recv_timeout(Duration::from_millis(100)) {
                     // Process the received message
                     Ok(message) => receive_message(&mut state, message, &clients_tx),
                     // Last sender disconnected - exit thread
