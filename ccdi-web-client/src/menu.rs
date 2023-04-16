@@ -41,13 +41,33 @@ impl Component for Menu {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         use MenuItem::*;
-        let menu_click = |action: MenuItem| ctx.link().callback(move |_| Msg::Click(action));
+        let selected = ctx.props().selected;
 
         html! {
             <div>
-                <button onclick={menu_click(Composition)}>{"Composition"}</button>
-                <button onclick={menu_click(Camera)}>{"Camera"}</button>
+                {menu_item("Composition", Composition, selected, ctx)}
+                {menu_item("Camera", Camera, selected, ctx)}
             </div>
         }
+    }
+}
+
+// =========================================== PRIVATE =============================================
+
+fn menu_item(
+    name: &'static str,
+    item: MenuItem,
+    selected: MenuItem,
+    ctx: &Context<Menu>
+) -> Html {
+    let menu_click = |action: MenuItem| ctx.link().callback(move |_| Msg::Click(action));
+
+    let selected_class = match item == selected {
+        true => Some("button-selected"),
+        false => None,
+    };
+
+    html! {
+        <button class={classes!(selected_class)} onclick={menu_click(item)}>{name}</button>
     }
 }

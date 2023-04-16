@@ -85,7 +85,7 @@ impl Model {
         self.view_state.as_ref().and_then(|state| mapper(state))
     }
 
-    fn render_tool(&self, ctx: &Context<Self>) -> Html {
+    fn render_tool(&self, _ctx: &Context<Self>) -> Html {
         match self.selected_menu {
             MenuItem::Composition => html!{
                 <CompositionDetail />

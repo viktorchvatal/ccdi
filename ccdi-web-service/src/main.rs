@@ -22,7 +22,7 @@ const CSS: &[u8] = include_bytes!("static/ccdi-web-client.css");
 fn main() {
     let (server_tx, server_rx) = std::sync::mpsc::channel::<StateMessage>();
     let (clients_tx, clients_rx) = std::sync::mpsc::channel::<ClientMessage>();
-    let server_thread = start_logic_thread(server_rx, clients_tx);
+    let _server_thread = start_logic_thread(server_rx, clients_tx);
 
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()

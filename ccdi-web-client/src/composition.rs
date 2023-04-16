@@ -1,6 +1,3 @@
-use std::sync::Arc;
-
-use ccdi_imager_interface::{ImagerProperties, DeviceProperty};
 use yew::Properties;
 use super::*;
 
@@ -21,7 +18,7 @@ impl Component for CompositionDetail {
         Self {}
     }
 
-    fn view(&self, ctx: &Context<Self>) -> Html {
+    fn view(&self, _ctx: &Context<Self>) -> Html {
         html!{
             <div>{"Composition"}</div>
         }

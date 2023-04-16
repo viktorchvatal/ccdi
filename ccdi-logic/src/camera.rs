@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use ccdi_common::ConnectionState;
 use ccdi_imager_interface::{ImagerDriver, ImagerDevice, ImagerProperties};
-use log::{info, debug};
+use log::{info};
 
 pub struct CameraController {
     driver: Box<dyn ImagerDriver>,
