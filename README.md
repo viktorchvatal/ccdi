@@ -1,6 +1,6 @@
 # Installing dependencies
 
-`apt install libusb-1.0.0-dev llvm-dev libclang-dev clang`
+`apt install libusb-1.0.0-dev llvm-dev libclang-dev clang libcfitsio-dev`
 
 `cargo install --locked trunk`
 
@@ -26,3 +26,10 @@ Reload UDEV rules and reconnect the device
 
 `ccdi-web-service$ cargo run --release`
 `ccdi-web-client$ trunk serve --release --open`
+
+# Notes
+
+Tool to view FITS images
+
+QFitsView - `sudo apt install qfitsview`
+

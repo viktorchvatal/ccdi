@@ -1,6 +1,8 @@
 use std::{thread, time::Duration};
 
+use ccdi_common::{to_string, log_err};
 use ccdi_driver_moravian::{get_any_camera_id, connect_usb_camera, CameraError, CameraDriver};
+use fitsio::FitsFile;
 
 
 fn main() -> Result<(), String> {
@@ -26,7 +28,7 @@ fn print_camera_info(camera: &CameraDriver) -> Result<(), CameraError> {
     let width = camera.read_chip_width()?;
     let height = camera.read_chip_height()?;
 
-    camera.start_exposure(1.0, true, 0, 0, width, height)?;
+    camera.start_exposure(0.1, true, 0, 0, width, height)?;
 
     while !(camera.image_ready()?) {
         println!("Image not ready, waiting ...");
@@ -36,6 +38,31 @@ fn print_camera_info(camera: &CameraDriver) -> Result<(), CameraError> {
     println!("Starting image download");
     let image_data = camera.read_image((width*height) as usize)?;
     println!("Image downloaded, pixels: {}", image_data.len());
-    println!("Data: {:?}", image_data);
+
+    log_err(
+        "Save FITS",
+        save_fits_file(image_data, width as usize, height as usize, "test.fits")
+    );
+
+    Ok(())
+}
+
+fn save_fits_file(data: Vec<u16>, width: usize, height: usize, path: &str) -> Result<(), String> {
+    use fitsio::images::{ImageDescription, ImageType};
+
+    let description = ImageDescription {
+        data_type: ImageType::Short,
+        dimensions: &[height, width],
+    };
+
+    let mut fitsfile = FitsFile::create(&path)
+    .with_custom_primary(&description)
+    .overwrite()
+    .open()
+    .map_err(to_string)?;
+
+    let hdu = fitsfile.primary_hdu().map_err(to_string)?;
+    hdu.write_image(&mut fitsfile, &data).map_err(to_string)?;
+
     Ok(())
 }

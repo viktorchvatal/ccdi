@@ -5,4 +5,7 @@ authors = ["vchvatal"]
 edition = "2021"
 
 [dependencies]
+fitsio = "0.21.2"
+
+ccdi-common = { path = "../ccdi-common" }
 ccdi-driver-moravian = { path = "../ccdi-driver-moravian" }
