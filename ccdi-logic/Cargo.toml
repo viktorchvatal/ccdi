@@ -5,6 +5,9 @@ edition = "2021"
 
 [dependencies]
 log = "0.4.17"
+
+nanocv = { git = "https://github.com/viktorchvatal/nanocv.git" }
+
 ccdi-common = { path = "../ccdi-common" }
 ccdi-imager-interface = { path = "../ccdi-imager-interface" }
 ccdi-imager-demo = { path = "../ccdi-imager-demo" }

@@ -3,13 +3,15 @@ use std::sync::Arc;
 use ccdi_imager_interface::{ImagerProperties, ExposureParams};
 use serde_derive::{Serialize, Deserialize};
 
+use crate::RgbImage;
+
 // ============================================ PUBLIC =============================================
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum ClientMessage {
     View(ViewState),
     JpegImage(Vec<u8>),
-    RawImage(RawImage),
+    RgbImage(RgbImage<u16>),
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]

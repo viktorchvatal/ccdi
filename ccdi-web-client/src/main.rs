@@ -6,7 +6,7 @@ mod composition;
 mod connection;
 
 use ccdi_common::{ClientMessage, StateMessage, ConnectionState, ViewState, LogicStatus};
-use ccdi_image::simple_raw_image_to_jpeg;
+use ccdi_image::{rgb_image_to_jpeg};
 use composition::CompositionDetail;
 use connection::{ConnectionService};
 use gloo::console;
@@ -56,12 +56,12 @@ impl Main {
         match message {
             ClientMessage::View(view) => self.view_state = Some(view),
             ClientMessage::JpegImage(image) => self.jpeg_image = Some(image),
-            ClientMessage::RawImage(image) => {
-                let (w, h) = (image.params.area.width, image.params.area.height);
+            ClientMessage::RgbImage(image) => {
+                let (w, h) = (image.width(), image.height());
                 let mpix = w*h/1024/1024;
                 console::info!(&format!("Acquired {} x {} image with {} MPixels", w, h, mpix));
 
-                match simple_raw_image_to_jpeg(&image, 10) {
+                match rgb_image_to_jpeg(&image) {
                     Ok(jpeg) => self.jpeg_image = Some(jpeg),
                     Err(error) => console::info!(&format!("Jpeg convert failed {}", error)),
                 }

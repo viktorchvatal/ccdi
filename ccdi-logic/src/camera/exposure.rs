@@ -1,9 +1,10 @@
 
 use std::mem::swap;
 
-use ccdi_common::{ExposureCommand, ClientMessage, RawImage};
+use ccdi_common::{ExposureCommand, ClientMessage, RawImage, debayer_scale_fast};
 use ccdi_imager_interface::{BasicProperties, ImagerDevice, ExposureParams, ExposureArea};
 use log::debug;
+use nanocv::ImgSize;
 
 // ============================================ PUBLIC =============================================
 
@@ -36,8 +37,11 @@ impl ExposureController {
             if let Some(params) = exposure {
                 let data = device.download_image(&params)?;
                 let raw_image = RawImage { params, data };
+                // TODO: Compute size
                 debug!("Image downloaded");
-                Ok(vec![ClientMessage::RawImage(raw_image)])
+                let rgb_image = debayer_scale_fast(&raw_image, ImgSize::new(900, 600));
+                debug!("Image resized");
+                Ok(vec![ClientMessage::RgbImage(rgb_image)])
             } else {
                 Ok(vec![])
             }
