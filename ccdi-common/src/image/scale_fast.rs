@@ -20,8 +20,8 @@ pub fn resize_channel(
     offset_y: usize,
 ) -> ImgBuf<u16> {
     let (w, h) = (image.params.area.width, image.params.area.height);
-    let x_indices = scale_index_table(w, size.x, offset_x);
-    let y_indices = scale_index_table(h, size.y, offset_y);
+    let x_indices = scale_index_table(w, size.x, offset_x, false);
+    let y_indices = scale_index_table(h, size.y, offset_y, false);
     let mut result = ImgBuf::<u16>::new_init(size, Default::default());
 
     for line in 0..size.y {
@@ -41,11 +41,10 @@ fn scale_index_table(
     source_size: usize,
     target_size: usize,
     offset: usize,
+    reverse: bool,
 ) -> Vec<usize> {
     (0..target_size)
-        .map(|x| {
-            let half = x*source_size/2/target_size;
-            half*2 + offset
-        })
+        .map(|x| if reverse { target_size - x - 1 } else { x })
+        .map(|x| (x*source_size/2/target_size)*2 + offset)
         .collect()
 }
