@@ -31,7 +31,6 @@ impl BackendState {
             },
             ClientConnected => vec![
                 ClientMessage::View(self.camera.get_view()),
-                ClientMessage::JpegImage(TEST_IMAGE.to_vec()),
             ]
         })
     }
@@ -43,5 +42,3 @@ impl BackendState {
 }
 
 // =========================================== PRIVATE =============================================
-
-const TEST_IMAGE: &[u8] = include_bytes!("test-image.jpg");

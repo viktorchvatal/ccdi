@@ -4,8 +4,11 @@ mod menu;
 mod camera;
 mod composition;
 mod connection;
+mod picture;
 
-use ccdi_common::{ClientMessage, StateMessage, ConnectionState, ViewState, LogicStatus};
+use std::rc::Rc;
+
+use ccdi_common::{ClientMessage, StateMessage, ConnectionState, ViewState, LogicStatus, RgbImage};
 use ccdi_image::{rgb_image_to_jpeg};
 use composition::CompositionDetail;
 use connection::{ConnectionService};
@@ -17,6 +20,7 @@ use yew::{html, Component, Context, Html, classes};
 
 use crate::camera::CameraDetail;
 use crate::menu::{Menu, MenuItem};
+use crate::picture::Picture;
 use crate::status_bar::StatusBar;
 use crate::footer::Footer;
 
@@ -35,7 +39,7 @@ pub enum UserAction {
 }
 
 pub struct Main {
-    pub jpeg_image: Option<Vec<u8>>,
+    pub image: Option<Rc<RgbImage<u16>>>,
     pub view_state: Option<ViewState>,
     pub selected_menu: MenuItem,
     pub connection_state: ConnectionState,
@@ -43,29 +47,10 @@ pub struct Main {
 }
 
 impl Main {
-    fn image_data(&self) -> Html {
-        match self.jpeg_image {
-            None => html! { },
-            Some(ref data) => html! {
-                <img src={format!("data:image/jpeg;base64,{}", STANDARD.encode(&data))} />
-            }
-        }
-    }
-
     fn receive_message(&mut self, message: ClientMessage) -> bool {
         match message {
             ClientMessage::View(view) => self.view_state = Some(view),
-            ClientMessage::JpegImage(image) => self.jpeg_image = Some(image),
-            ClientMessage::RgbImage(image) => {
-                let (w, h) = (image.width(), image.height());
-                let mpix = w*h/1024/1024;
-                console::info!(&format!("Acquired {} x {} image with {} MPixels", w, h, mpix));
-
-                match rgb_image_to_jpeg(&image) {
-                    Ok(jpeg) => self.jpeg_image = Some(jpeg),
-                    Err(error) => console::info!(&format!("Jpeg convert failed {}", error)),
-                }
-            }
+            ClientMessage::RgbImage(image) => self.image = Some(Rc::new(image)),
         }
 
         true
@@ -100,7 +85,7 @@ impl Component for Main {
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
-            jpeg_image: None,
+            image: None,
             view_state: None,
             selected_menu: MenuItem::Camera,
             connection_state: ConnectionState::Disconnected,
@@ -159,7 +144,7 @@ impl Component for Main {
                 <Menu clicked={menu_clicked} selected={self.selected_menu} />
                 <div class="main-row">
                     <div class="main-image-column">
-                        { self.image_data() }
+                        <Picture image={self.image.clone()} />
                     </div>
                     <div class="main-tool-column">
                         { self.render_tool(ctx) }

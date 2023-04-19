@@ -10,7 +10,6 @@ use crate::RgbImage;
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum ClientMessage {
     View(ViewState),
-    JpegImage(Vec<u8>),
     RgbImage(RgbImage<u16>),
 }
 
