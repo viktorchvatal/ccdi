@@ -39,7 +39,7 @@ pub struct Main {
     pub view_state: Option<ViewState>,
     pub selected_menu: MenuItem,
     pub connection_state: ConnectionState,
-    pub conection_context: Option<Scope<ConnectionService>>,
+    pub connection_context: Option<Scope<ConnectionService>>,
 }
 
 impl Main {
@@ -104,21 +104,21 @@ impl Component for Main {
             view_state: None,
             selected_menu: MenuItem::Camera,
             connection_state: ConnectionState::Disconnected,
-            conection_context: None,
+            connection_context: None,
         }
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::MessageSent(message) => {
-                match self.conection_context.as_ref() {
+                match self.connection_context.as_ref() {
                     None => console::warn!("No connection service registered."),
                     Some(context) => context.send_message(connection::Msg::SendData(message)),
                 }
                 false
             }
             Msg::RegisterConnectionService(context) => {
-                self.conection_context = Some(context);
+                self.connection_context = Some(context);
                 false
             }
             Msg::ConnectionState(state) => {
