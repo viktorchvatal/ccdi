@@ -23,6 +23,7 @@ use bridge::start_std_to_tokio_channel_bridge;
 
 fn main() {
     let config: ServiceConfig = argh::from_env();
+    init_logger(config.debug);
 
     let logic_config = LogicConfig {
         demo_mode: config.demo,
@@ -35,7 +36,7 @@ fn main() {
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
-        .unwrap()
+        .expect("Tokio failed to start")
         .block_on(tokio_main(server_tx, clients_rx))
 }
 
@@ -43,8 +44,6 @@ async fn tokio_main(
     sync_server_tx: std::sync::mpsc::Sender<StateMessage>,
     sync_clients_rx: std::sync::mpsc::Receiver<ClientMessage>,
 ) {
-    init_logger(true);
-
     let (ws_from_client_tx, ws_from_client_rx) = mpsc::unbounded_channel::<StateMessage>();
     let (async_clients_tx, async_clients_rx) = mpsc::unbounded_channel::<ClientMessage>();
     // let server_tx = Arc::new(server_tx);
