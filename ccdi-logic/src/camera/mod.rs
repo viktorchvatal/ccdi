@@ -93,7 +93,10 @@ impl CameraController {
     }
 
     fn set_detail(&mut self, detail: &str) {
-        info!("Detail updated: {}", detail);
+        if detail != self.detail {
+            info!("Detail updated: {}", detail);
+        }
+
         self.detail = detail.to_owned();
     }
 
