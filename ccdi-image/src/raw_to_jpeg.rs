@@ -9,6 +9,13 @@ use image::{DynamicImage};
 pub struct Transform {
     pub sub: i32,
     pub gain: i32,
+    pub function: TransformFunction
+}
+
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum TransformFunction {
+    Linear,
+    Sqrt,
 }
 
 pub fn rgb_image_to_jpeg(image: &RgbImage<u16>, transform: Transform) -> Result<Vec<u8>, String> {
@@ -43,5 +50,14 @@ fn save_dynamic_image_to_jpeg(image: &mut DynamicImage) -> Result<Vec<u8>, Strin
 }
 
 fn to_8bit(transform: Transform, input: i32) -> u8 {
-    min(255, max(0, input - transform.sub)*transform.gain >> 8) as u8
+    match transform.function {
+        TransformFunction::Linear => {
+            min(255, max(0, input - transform.sub)*transform.gain >> 8) as u8
+        },
+        TransformFunction::Sqrt => {
+            let input = (input - transform.sub) as f32;
+            let root = (input.sqrt()*255.0) as i32;
+            min(255, max(0, root)*transform.gain >> 8) as u8
+        },
+    }
 }

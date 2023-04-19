@@ -1,16 +1,18 @@
 use ccdi_common::RgbImage;
-use ccdi_image::Transform;
+use ccdi_image::{Transform, TransformFunction};
 use yew::Properties;
 use super::*;
 
 // ============================================ PUBLIC =============================================
 
 pub enum Msg {
-    ChangeGain(i32)
+    ChangeGain(i32),
+    ChangeFunction(TransformFunction),
 }
 
 pub struct Picture {
     gain: i32,
+    function: TransformFunction,
 }
 
 #[derive(Clone, PartialEq, Properties)]
@@ -25,37 +27,83 @@ impl Component for Picture {
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
             gain: 1,
+            function: TransformFunction::Sqrt,
         }
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::ChangeGain(value) => self.gain = value,
+            Msg::ChangeFunction(function) => self.function = function,
         }
         true
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let gain_click = |value: i32| ctx.link().callback(move |_| Msg::ChangeGain(value));
-
         let transform = Transform {
             gain: self.gain,
+            function: self.function,
             sub: 500
         };
 
         html! {
             <div>
                 <div>
-                    <button onclick={gain_click(1)}>{"x 1"}</button>
-                    <button onclick={gain_click(4)}>{"x 4"}</button>
-                    <button onclick={gain_click(16)}>{"x 16"}</button>
-                    <button onclick={gain_click(64)}>{"x 64"}</button>
+                    { gain_button(ctx, self.gain, 1) }
+                    { gain_button(ctx, self.gain, 2) }
+                    { gain_button(ctx, self.gain, 4) }
+                    { gain_button(ctx, self.gain, 8) }
+                    { gain_button(ctx, self.gain, 16) }
+                    { gain_button(ctx, self.gain, 32) }
+                    { gain_button(ctx, self.gain, 64) }
+                    { function_button(ctx, self.function, TransformFunction::Linear, "Line") }
+                    { function_button(ctx, self.function, TransformFunction::Sqrt, "Sqrt") }
                 </div>
                 <div>
                     {rgb_image_to_html(ctx.props().image.as_deref(), transform)}
                 </div>
             </div>
         }
+    }
+}
+
+fn function_button(
+    ctx: &Context<Picture>,
+    current_function: TransformFunction,
+    button_function: TransformFunction,
+    text: &str,
+) -> Html {
+    let function_click = |value: TransformFunction| ctx.link()
+        .callback(move |_| Msg::ChangeFunction(value));
+
+    let selected_class = match current_function == button_function {
+        true => Some("button-selected"),
+        false => None,
+    };
+
+    html!{
+        <button
+            class={classes!("short-button", selected_class)}
+            onclick={function_click(button_function)}
+        >{ text }</button>
+    }
+}
+
+fn gain_button(ctx: &Context<Picture>, current_gain: i32, button_gain: i32) -> Html {
+    let gain_click = |value: i32| ctx.link().callback(move |_| Msg::ChangeGain(value));
+
+    let selected_class = match current_gain == button_gain {
+        true => Some("button-selected"),
+        false => None,
+    };
+
+    html!{
+        <button
+            class={classes!("short-button", selected_class)}
+            onclick={gain_click(button_gain)}
+        >{
+            format!("X {}", button_gain)
+        }</button>
     }
 }
 

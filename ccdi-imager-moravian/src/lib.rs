@@ -80,11 +80,11 @@ fn read_basic_properties(device: &CameraDriver) -> Result<BasicProperties, Camer
 
 fn read_all_properties(device: &CameraDriver) -> Result<Vec<DeviceProperty>, CameraError> {
     Ok(vec![
-        prop("Chip Temperature", device.read_chip_temperature()?),
-        prop("Hot Temperature", device.read_hot_temperature()?),
-        prop("Camera Temperature", device.read_camera_temperature()?),
-        prop("Env Temperature", device.read_environment_temperature()?),
-        prop("Supply Voltage", device.read_supply_voltage()?),
+        prop_f32("Chip Temperature", device.read_chip_temperature()?, 2),
+        prop_f32("Hot Temperature", device.read_hot_temperature()?, 2),
+        prop_f32("Camera Temperature", device.read_camera_temperature()?, 2),
+        prop_f32("Env Temperature", device.read_environment_temperature()?, 2),
+        prop_f32("Supply Voltage", device.read_supply_voltage()?, 2),
         prop("Power Utilization", device.read_power_utilization()?),
         prop("ADC Gain", device.read_adc_gain()?),
         prop("Camera ID", device.read_camera_id()?),
@@ -98,5 +98,12 @@ fn prop<T: Debug>(name: &str, value: T) -> DeviceProperty {
     DeviceProperty {
         name: name.to_owned(),
         value: format!("{:?}", value)
+    }
+}
+
+fn prop_f32(name: &str, value: f32, precision: usize) -> DeviceProperty {
+    DeviceProperty {
+        name: name.to_owned(),
+        value: format!("{:0.prec$}", value, prec = precision)
     }
 }
