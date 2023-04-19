@@ -3,18 +3,17 @@ mod footer;
 mod menu;
 mod camera;
 mod composition;
+mod connection;
 
-use anyhow::Error;
 use ccdi_common::{ClientMessage, StateMessage, ConnectionState, ViewState, LogicStatus};
 use ccdi_image::simple_raw_image_to_jpeg;
 use composition::CompositionDetail;
-use yew_websocket::macros::Json;
+use connection::{ConnectionService};
 use gloo::console;
-use gloo::timers::callback::Interval;
 
 use base64::{engine::general_purpose::STANDARD, Engine};
+use yew::html::Scope;
 use yew::{html, Component, Context, Html, classes};
-use yew_websocket::websocket::{WebSocketService, WebSocketStatus, WebSocketTask};
 
 use crate::camera::CameraDetail;
 use crate::menu::{Menu, MenuItem};
@@ -23,18 +22,11 @@ use crate::footer::Footer;
 
 // ============================================ PUBLIC =============================================
 
-pub enum WsAction {
-    Connect,
-    SendData(StateMessage),
-    Established,
-    Disconnect,
-    Lost,
-}
-
 pub enum Msg {
-    Tick,
-    WsAction(WsAction),
-    WsReady(Result<ClientMessage, Error>),
+    RegisterConnectionService(Scope<ConnectionService>),
+    ConnectionState(ConnectionState),
+    MessageReceived(ClientMessage),
+    MessageSent(StateMessage),
     Action(UserAction)
 }
 
@@ -42,23 +34,15 @@ pub enum UserAction {
     MenuClick(MenuItem),
 }
 
-impl From<WsAction> for Msg {
-    fn from(action: WsAction) -> Self {
-        Msg::WsAction(action)
-    }
-}
-
-pub struct Model {
-    pub fetching: bool,
+pub struct Main {
     pub jpeg_image: Option<Vec<u8>>,
-    pub ws: Option<WebSocketTask>,
-    pub connection: ConnectionState,
     pub view_state: Option<ViewState>,
     pub selected_menu: MenuItem,
-    _interval: Interval,
+    pub connection_state: ConnectionState,
+    pub conection_context: Option<Scope<ConnectionService>>,
 }
 
-impl Model {
+impl Main {
     fn image_data(&self) -> Html {
         match self.jpeg_image {
             None => html! { },
@@ -97,7 +81,7 @@ impl Model {
 
     fn render_tool(&self, ctx: &Context<Self>) -> Html {
         let action = ctx.link()
-            .callback(|action: StateMessage| Msg::WsAction(WsAction::SendData(action)));
+            .callback(|action: StateMessage| Msg::MessageSent(action));
 
         match self.selected_menu {
             MenuItem::Composition => html!{
@@ -110,27 +94,37 @@ impl Model {
     }
 }
 
-impl Component for Model {
+impl Component for Main {
     type Message = Msg;
     type Properties = ();
 
-    fn create(ctx: &Context<Self>) -> Self {
-        let callback = ctx.link().callback(|_| Msg::Tick);
-        let interval = Interval::new(600, move || callback.emit(()));
-
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {
-            fetching: false,
-            ws: None,
             jpeg_image: None,
-            connection: ConnectionState::Disconnected,
             view_state: None,
             selected_menu: MenuItem::Camera,
-            _interval: interval
+            connection_state: ConnectionState::Disconnected,
+            conection_context: None,
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
+            Msg::MessageSent(message) => {
+                match self.conection_context.as_ref() {
+                    None => console::warn!("No connection service registered."),
+                    Some(context) => context.send_message(connection::Msg::SendData(message)),
+                }
+                false
+            }
+            Msg::RegisterConnectionService(context) => {
+                self.conection_context = Some(context);
+                false
+            }
+            Msg::ConnectionState(state) => {
+                self.connection_state = state;
+                true
+            }
             Msg::Action(action) => {
                 match action {
                     UserAction::MenuClick(menuitem) => {
@@ -139,69 +133,8 @@ impl Component for Model {
                     },
                 }
             }
-            Msg::Tick => {
-                if self.ws.is_none() {
-                    ctx.link().send_message(WsAction::Connect);
-                }
-                false
-            },
-            Msg::WsAction(action) => match action {
-                WsAction::Connect => {
-                    let hostname = gloo::utils::window().location().hostname().ok()
-                        .unwrap_or(String::from("localhost"));
-
-                    let ws_url = format!("ws://{}:8081/ccdi", hostname);
-
-                    console::info!(&hostname, "WS: ", &ws_url);
-                    let callback = ctx.link().callback(|Json(data)| Msg::WsReady(data));
-                    let notification = ctx.link().batch_callback(|status| match status {
-                        WebSocketStatus::Opened => Some(WsAction::Established.into()),
-                        WebSocketStatus::Closed | WebSocketStatus::Error => {
-                            Some(WsAction::Lost.into())
-                        }
-                    });
-
-                    if let Ok(connection) = WebSocketService::connect(
-                        &ws_url,
-                        callback,
-                        notification,
-                    ) {
-                        self.ws = Some(connection);
-                        self.connection = ConnectionState::Connecting;
-                    } else {
-                        console::error!("Failed to create web socket service");
-                    }
-                    true
-                }
-                WsAction::SendData(message) => {
-                    if let Ok(json) = serde_json::to_string(&message) {
-                        if let Some(ref mut ws) = self.ws {
-                            ws.send(json)
-                        }
-                    }
-                    false
-                }
-                WsAction::Disconnect => {
-                    self.ws.take();
-                    self.connection = ConnectionState::Disconnected;
-                    true
-                }
-                WsAction::Established => {
-                    ctx.link().send_message(WsAction::SendData(StateMessage::ClientConnected));
-                    self.connection = ConnectionState::Established;
-                    false
-                }
-                WsAction::Lost => {
-                    self.ws = None;
-                    true
-                }
-            },
-            Msg::WsReady(response) => {
-                if let Ok(message) = response {
-                    self.receive_message(message)
-                } else {
-                    false
-                }
+            Msg::MessageReceived(message) => {
+                self.receive_message(message)
             }
         }
     }
@@ -210,9 +143,19 @@ impl Component for Model {
         let menu_clicked = ctx.link()
             .callback(|action: MenuItem| Msg::Action(UserAction::MenuClick(action)));
 
+        let client_message_received = ctx.link()
+            .callback(|message: ClientMessage| Msg::MessageReceived(message));
+
+        let connection_state_changed = ctx.link()
+            .callback(|state: ConnectionState| Msg::ConnectionState(state));
+
         html! {
             <>
-                <StatusBar connection={self.connection} logic={self.get_logic_status()}/>
+                <ConnectionService
+                    on_message={client_message_received}
+                    on_state_change={connection_state_changed}
+                />
+                <StatusBar connection={self.connection_state} logic={self.get_logic_status()}/>
                 <Menu clicked={menu_clicked} selected={self.selected_menu} />
                 <div class="main-row">
                     <div class="main-image-column">
@@ -233,5 +176,5 @@ impl Component for Model {
 }
 
 fn main() {
-    yew::Renderer::<Model>::new().render();
+    yew::Renderer::<Main>::new().render();
 }
