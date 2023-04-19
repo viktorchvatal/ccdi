@@ -21,7 +21,7 @@ pub fn resize_channel(
 ) -> ImgBuf<u16> {
     let (w, h) = (image.params.area.width, image.params.area.height);
     let x_indices = scale_index_table(w, size.x, offset_x, false);
-    let y_indices = scale_index_table(h, size.y, offset_y, false);
+    let y_indices = scale_index_table(h, size.y, offset_y, true);
     let mut result = ImgBuf::<u16>::new_init(size, Default::default());
 
     for line in 0..size.y {
