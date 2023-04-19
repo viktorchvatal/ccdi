@@ -1,6 +1,7 @@
 mod websocket;
 mod bridge;
 mod config;
+mod static_files;
 
 use ccdi_common::ClientMessage;
 use ccdi_common::StateMessage;
@@ -8,6 +9,7 @@ use ccdi_common::init_logger;
 use ccdi_logic::LogicConfig;
 use ccdi_logic::start_logic_thread;
 use config::ServiceConfig;
+use static_files::static_files_rules;
 use tokio::sync::mpsc;
 
 use warp::Filter;
@@ -18,11 +20,6 @@ use bridge::start_tokio_to_std_channel_bridge;
 use bridge::start_std_to_tokio_channel_bridge;
 
 // ============================================ PUBLIC =============================================
-
-const INDEX: &[u8] = include_bytes!("static/index.html");
-const WASM: &[u8] = include_bytes!("static/ccdi-web-client.wasm");
-const JS: &[u8] = include_bytes!("static/ccdi-web-client.js");
-const CSS: &[u8] = include_bytes!("static/ccdi-web-client.css");
 
 fn main() {
     let config: ServiceConfig = argh::from_env();
@@ -60,21 +57,8 @@ async fn tokio_main(
 
     let websocket_service = create_websocket_service("ccdi", clients);
 
-    let index = warp::path::end().map(|| warp::reply::html(INDEX));
-
-    let wasm = warp::path("ccdi-web-client.wasm")
-        .map(|| warp::reply::with_header(WASM, "Content-Type", "application/wasm"));
-
-    let js = warp::path("ccdi-web-client.js")
-        .map(|| warp::reply::with_header(JS, "Content-Type", "text/javascript"));
-
-    let css = warp::path("ccdi-web-client.css")
-        .map(|| warp::reply::with_header(CSS, "Content-Type", "text/css"));
-
-    let static_files = wasm.or(js).or(css).or(index);
-
     let routes = warp::get().and(
-        websocket_service.or(static_files)
+        websocket_service.or(static_files_rules())
     );
 
     warp::serve(routes)
