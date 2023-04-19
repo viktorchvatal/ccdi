@@ -9,12 +9,14 @@ pub struct BackendState {
 }
 
 impl BackendState {
-    pub fn new() -> Self {
+    pub fn new(demo_mode: bool) -> Self {
         Self {
-            camera: CameraController::new(Box::new(
-                // ccdi_imager_demo::DemoImagerDriver::new()
-                ccdi_imager_moravian::MoravianImagerDriver::new()
-            ))
+            camera: CameraController::new(
+                match demo_mode {
+                    false => Box::new(ccdi_imager_moravian::MoravianImagerDriver::new()),
+                    true => Box::new(ccdi_imager_demo::DemoImagerDriver::new()),
+                }
+            )
         }
     }
 
@@ -37,12 +39,6 @@ impl BackendState {
     /// Called periodically to perform any tasks needed and return messages for clients
     pub fn periodic(&mut self) -> Result<Vec<ClientMessage>, String> {
         Ok(self.camera.periodic())
-    }
-}
-
-impl Default for BackendState {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

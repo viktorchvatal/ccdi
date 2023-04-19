@@ -8,14 +8,19 @@ use crate::state::BackendState;
 
 // ============================================ PUBLIC =============================================
 
+pub struct LogicConfig {
+    pub demo_mode: bool,
+}
+
 pub fn start_logic_thread(
+    config: LogicConfig,
     server_rx: Receiver<StateMessage>,
     clients_tx: Sender<ClientMessage>,
 ) -> Result<JoinHandle<()>, String> {
     thread::Builder::new()
         .name("server".to_string())
         .spawn(move || {
-            let mut state = BackendState::new();
+            let mut state = BackendState::new(config.demo_mode);
 
             loop {
                 match server_rx.recv_timeout(Duration::from_millis(100)) {
