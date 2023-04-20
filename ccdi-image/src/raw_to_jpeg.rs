@@ -16,6 +16,7 @@ pub struct Transform {
 pub enum TransformFunction {
     Linear,
     Sqrt,
+    Log2,
 }
 
 pub fn rgb_image_to_jpeg(image: &RgbImage<u16>, transform: Transform) -> Result<Vec<u8>, String> {
@@ -57,6 +58,11 @@ fn to_8bit(transform: Transform, input: i32) -> u8 {
         TransformFunction::Sqrt => {
             let input = (input - transform.sub) as f32;
             let root = (input.sqrt()*255.0) as i32;
+            min(255, max(0, root)*transform.gain >> 8) as u8
+        },
+        TransformFunction::Log2 => {
+            let input = (input - transform.sub) as f32;
+            let root = (input.log2()*4096.0) as i32 - 15000;
             min(255, max(0, root)*transform.gain >> 8) as u8
         },
     }

@@ -5,10 +5,12 @@ mod camera;
 mod composition;
 mod connection;
 mod picture;
+mod gain;
+mod time;
 
 use std::rc::Rc;
 
-use ccdi_common::{ClientMessage, StateMessage, ConnectionState, ViewState, LogicStatus, RgbImage};
+use ccdi_common::{ClientMessage, StateMessage, ConnectionState, ViewState, LogicStatus, RgbImage, ExposureCommand};
 use ccdi_image::{rgb_image_to_jpeg};
 use composition::CompositionDetail;
 use connection::{ConnectionService};
@@ -19,10 +21,12 @@ use yew::html::Scope;
 use yew::{html, Component, Context, Html, classes};
 
 use crate::camera::CameraDetail;
+use crate::gain::GainSelector;
 use crate::menu::{Menu, MenuItem};
 use crate::picture::Picture;
 use crate::status_bar::StatusBar;
 use crate::footer::Footer;
+use crate::time::TimeSelector;
 
 // ============================================ PUBLIC =============================================
 
@@ -30,8 +34,8 @@ pub enum Msg {
     RegisterConnectionService(Scope<ConnectionService>),
     ConnectionState(ConnectionState),
     MessageReceived(ClientMessage),
-    MessageSent(StateMessage),
-    Action(UserAction)
+    SendMessage(StateMessage),
+    Action(UserAction),
 }
 
 pub enum UserAction {
@@ -66,7 +70,7 @@ impl Main {
 
     fn render_tool(&self, ctx: &Context<Self>) -> Html {
         let action = ctx.link()
-            .callback(|action: StateMessage| Msg::MessageSent(action));
+            .callback(|action: StateMessage| Msg::SendMessage(action));
 
         match self.selected_menu {
             MenuItem::Composition => html!{
@@ -87,7 +91,7 @@ impl Component for Main {
         Self {
             image: None,
             view_state: None,
-            selected_menu: MenuItem::Camera,
+            selected_menu: MenuItem::Composition,
             connection_state: ConnectionState::Disconnected,
             connection_context: None,
         }
@@ -95,7 +99,7 @@ impl Component for Main {
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Msg::MessageSent(message) => {
+            Msg::SendMessage(message) => {
                 match self.connection_context.as_ref() {
                     None => console::warn!("No connection service registered."),
                     Some(context) => context.send_message(connection::Msg::SendData(message)),
@@ -125,14 +129,29 @@ impl Component for Main {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let menu_clicked = ctx.link()
-            .callback(|action: MenuItem| Msg::Action(UserAction::MenuClick(action)));
+        let menu_clicked = ctx.link().callback(
+            |action: MenuItem| Msg::Action(UserAction::MenuClick(action))
+        );
 
-        let client_message_received = ctx.link()
-            .callback(|message: ClientMessage| Msg::MessageReceived(message));
+        let client_message_received = ctx.link().callback(
+            |message: ClientMessage| Msg::MessageReceived(message)
+        );
 
-        let connection_state_changed = ctx.link()
-            .callback(|state: ConnectionState| Msg::ConnectionState(state));
+        let connection_state_changed = ctx.link().callback(
+            |state: ConnectionState| Msg::ConnectionState(state)
+        );
+
+        let gain_changed = ctx.link().callback(
+            |gain: u16| Msg::SendMessage(
+                StateMessage::ExposureMessage(ExposureCommand::SetGain(gain))
+            )
+        );
+
+        let time_changed = ctx.link().callback(
+            |time: f64| Msg::SendMessage(
+                StateMessage::ExposureMessage(ExposureCommand::SetTime(time))
+            )
+        );
 
         html! {
             <>
@@ -147,6 +166,8 @@ impl Component for Main {
                         <Picture image={self.image.clone()} />
                     </div>
                     <div class="main-tool-column">
+                        <GainSelector gain_changed={gain_changed} />
+                        <TimeSelector time_changed={time_changed} />
                         { self.render_tool(ctx) }
                     </div>
                 </div>

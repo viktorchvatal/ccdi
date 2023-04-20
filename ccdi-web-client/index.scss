@@ -123,9 +123,26 @@ footer {
 }
 
 .main-image-column {
-  flex: 50%;
+  flex: 66%;
 }
 
 .main-tool-column {
-  flex: 50%;
+  flex: 34%;
+}
+
+.image-main {
+  display: flex;
+}
+
+.image-tools {
+  width: 60px;
+}
+
+.image-content {
+  flex: auto;
+  padding: 5px;
+}
+
+.image-tools-separator {
+  height: 20px;
 }

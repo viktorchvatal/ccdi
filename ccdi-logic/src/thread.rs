@@ -23,7 +23,7 @@ pub fn start_logic_thread(
             let mut state = BackendState::new(config.demo_mode);
 
             loop {
-                match server_rx.recv_timeout(Duration::from_millis(100)) {
+                match server_rx.recv_timeout(Duration::from_millis(50)) {
                     // Process the received message
                     Ok(message) => receive_message(&mut state, message, &clients_tx),
                     // Last sender disconnected - exit thread
