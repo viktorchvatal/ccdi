@@ -2,7 +2,9 @@ mod properties;
 mod exposure;
 mod connected;
 
-use ccdi_common::{ConnectionState, ViewState, LogicStatus, ExposureCommand, ClientMessage};
+use std::sync::Arc;
+
+use ccdi_common::{ConnectionState, ViewState, LogicStatus, ExposureCommand, ClientMessage, RgbImage};
 use ccdi_imager_interface::{ImagerDriver, DeviceDescriptor};
 use log::{info};
 
@@ -16,6 +18,8 @@ pub struct CameraController {
     detail: String,
     connected: Option<ConnectedCameraController>,
     view: Option<ViewState>,
+    last_gain: u16,
+    last_time: f64,
 }
 
 impl CameraController {
@@ -26,6 +30,8 @@ impl CameraController {
             connected: None,
             detail: String::from("Started"),
             view: None,
+            last_gain: 0,
+            last_time: 1.0,
         }
     }
 
@@ -66,10 +72,22 @@ impl CameraController {
                     .unwrap_or(ConnectionState::Disconnected)
             },
             camera_properties: self.connected.as_ref().map(|cam| cam.get_properties()),
+            gain: self.last_gain,
+            time: self.last_time,
         }
     }
 
+    pub fn last_image(&self) -> Option<Arc<RgbImage<u16>>> {
+        self.connected.as_ref().and_then(|camera| camera.last_image())
+    }
+
     pub fn exposure_command(&mut self, command: ExposureCommand) {
+        match command {
+            ExposureCommand::SetGain(gain) => self.last_gain = gain,
+            ExposureCommand::SetTime(time) => self.last_time = time,
+            _ => {},
+        }
+
         match self.connected.as_mut() {
             None => self.set_detail("Not connected - cannot handle exposure command"),
             Some(connected) => match connected.exposure_command(command) {

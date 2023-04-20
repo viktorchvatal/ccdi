@@ -8,9 +8,9 @@ mod picture;
 mod gain;
 mod time;
 
-use std::rc::Rc;
+use std::sync::Arc;
 
-use ccdi_common::{ClientMessage, StateMessage, ConnectionState, ViewState, LogicStatus, RgbImage, ExposureCommand};
+use ccdi_common::*;
 use ccdi_image::{rgb_image_to_jpeg};
 use composition::CompositionDetail;
 use connection::{ConnectionService};
@@ -40,32 +40,26 @@ pub enum Msg {
 
 pub enum UserAction {
     MenuClick(MenuItem),
+    SetGain(u16),
+    SetExposure(f64),
 }
 
 pub struct Main {
-    pub image: Option<Rc<RgbImage<u16>>>,
-    pub view_state: Option<ViewState>,
-    pub selected_menu: MenuItem,
+    pub image: Option<Arc<RgbImage<u16>>>,
+    pub view_state: ViewState,
     pub connection_state: ConnectionState,
     pub connection_context: Option<Scope<ConnectionService>>,
+    pub selected_menu: MenuItem,
 }
 
 impl Main {
     fn receive_message(&mut self, message: ClientMessage) -> bool {
         match message {
-            ClientMessage::View(view) => self.view_state = Some(view),
-            ClientMessage::RgbImage(image) => self.image = Some(Rc::new(image)),
+            ClientMessage::View(view) => self.view_state = view,
+            ClientMessage::RgbImage(image) => self.image = Some(image),
         }
 
         true
-    }
-
-    fn get_logic_status(&self) -> LogicStatus {
-        self.view_state.as_ref().map(|state| state.status).unwrap_or(Default::default())
-    }
-
-    fn view_part<T, F: Fn(&ViewState) -> Option<T>>(&self, mapper: F) -> Option<T> {
-        self.view_state.as_ref().and_then(|state| mapper(state))
     }
 
     fn render_tool(&self, ctx: &Context<Self>) -> Html {
@@ -77,7 +71,7 @@ impl Main {
                 <CompositionDetail on_action={action} />
             },
             MenuItem::Camera => html!{
-                <CameraDetail data={self.view_part(|state| state.camera_properties.clone())} />
+                <CameraDetail data={self.view_state.camera_properties.clone()} />
             },
         }
     }
@@ -90,14 +84,14 @@ impl Component for Main {
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
             image: None,
-            view_state: None,
+            view_state: Default::default(),
             selected_menu: MenuItem::Composition,
             connection_state: ConnectionState::Disconnected,
             connection_context: None,
         }
     }
 
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::SendMessage(message) => {
                 match self.connection_context.as_ref() {
@@ -118,9 +112,19 @@ impl Component for Main {
                 match action {
                     UserAction::MenuClick(menuitem) => {
                         self.selected_menu = menuitem;
-                        true
                     },
+                    UserAction::SetExposure(exposure) => {
+                        ctx.link().send_message(Msg::SendMessage(
+                            StateMessage::ExposureMessage(ExposureCommand::SetTime(exposure))
+                        ));
+                    },
+                    UserAction::SetGain(gain) => {
+                        ctx.link().send_message(Msg::SendMessage(
+                            StateMessage::ExposureMessage(ExposureCommand::SetGain(gain))
+                        ));
+                    }
                 }
+                true
             }
             Msg::MessageReceived(message) => {
                 self.receive_message(message)
@@ -142,15 +146,11 @@ impl Component for Main {
         );
 
         let gain_changed = ctx.link().callback(
-            |gain: u16| Msg::SendMessage(
-                StateMessage::ExposureMessage(ExposureCommand::SetGain(gain))
-            )
+            |gain: u16| Msg::Action(UserAction::SetGain(gain))
         );
 
         let time_changed = ctx.link().callback(
-            |time: f64| Msg::SendMessage(
-                StateMessage::ExposureMessage(ExposureCommand::SetTime(time))
-            )
+            |time: f64| Msg::Action(UserAction::SetExposure(time))
         );
 
         html! {
@@ -159,22 +159,19 @@ impl Component for Main {
                     on_message={client_message_received}
                     on_state_change={connection_state_changed}
                 />
-                <StatusBar connection={self.connection_state} logic={self.get_logic_status()}/>
+                <StatusBar connection={self.connection_state} logic={self.view_state.status}/>
                 <Menu clicked={menu_clicked} selected={self.selected_menu} />
                 <div class="main-row">
                     <div class="main-image-column">
                         <Picture image={self.image.clone()} />
                     </div>
                     <div class="main-tool-column">
-                        <GainSelector gain_changed={gain_changed} />
-                        <TimeSelector time_changed={time_changed} />
+                        <GainSelector gain_changed={gain_changed} selected_gain={self.view_state.gain} />
+                        <TimeSelector time_changed={time_changed} selected_time={self.view_state.time} />
                         { self.render_tool(ctx) }
                     </div>
                 </div>
-                <Footer text={
-                    self.view_state.as_ref()
-                        .map(|view| view.detail.clone())
-                        .unwrap_or(String::new())}
+                <Footer text={self.view_state.detail.clone()}
                 />
             </>
         }

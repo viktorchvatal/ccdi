@@ -17,7 +17,7 @@ pub struct Picture {
 
 #[derive(Clone, PartialEq, Properties)]
 pub struct PictureData {
-    pub image: Option<Rc<RgbImage<u16>>>,
+    pub image: Option<Arc<RgbImage<u16>>>,
 }
 
 impl Component for Picture {

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use ccdi_common::{ExposureCommand, ClientMessage, ConnectionState};
+use ccdi_common::{ExposureCommand, ClientMessage, ConnectionState, RgbImage};
 use ccdi_imager_interface::{ImagerDevice, ImagerProperties};
 
 use super::{properties::{PropertiesController}, exposure::ExposureController};
@@ -55,5 +55,9 @@ impl ConnectedCameraController {
             false => ConnectionState::Disconnected,
             true => ConnectionState::Established
         }
+    }
+
+    pub fn last_image(&self) -> Option<Arc<RgbImage<u16>>> {
+        self.exposure.last_image()
     }
 }

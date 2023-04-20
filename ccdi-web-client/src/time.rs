@@ -3,9 +3,7 @@ use super::*;
 
 // ============================================ PUBLIC =============================================
 
-pub struct TimeSelector {
-    time: f64
-}
+pub struct TimeSelector;
 
 pub enum Msg {
     SetTime(f64),
@@ -14,6 +12,7 @@ pub enum Msg {
 #[derive(Clone, PartialEq, Properties)]
 pub struct TimeData {
     pub time_changed: Callback<f64>,
+    pub selected_time: f64,
 }
 
 impl Component for TimeSelector {
@@ -21,13 +20,12 @@ impl Component for TimeSelector {
     type Properties = TimeData;
 
     fn create(_ctx: &Context<Self>) -> Self {
-        Self { time: 1.0 }
+        Self { }
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::SetTime(value) => {
-                self.time = value;
                 ctx.props().time_changed.emit(value)
             },
         }
@@ -35,40 +33,42 @@ impl Component for TimeSelector {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        let selected = ctx.props().selected_time;
+
         html! {
             <div>
                 <p>{"Set camera exposure time"}</p>
                 <div>
-                    { time_button(self.time, 0.1, ctx)}
-                    { time_button(self.time, 0.15, ctx)}
-                    { time_button(self.time, 0.2, ctx)}
-                    { time_button(self.time, 0.3, ctx)}
-                    { time_button(self.time, 0.5, ctx)}
-                    { time_button(self.time, 0.7, ctx)}
+                    { time_button(selected, 0.1, ctx)}
+                    { time_button(selected, 0.15, ctx)}
+                    { time_button(selected, 0.2, ctx)}
+                    { time_button(selected, 0.3, ctx)}
+                    { time_button(selected, 0.5, ctx)}
+                    { time_button(selected, 0.7, ctx)}
                 </div>
                 <div>
-                    { time_button(self.time, 1.0, ctx)}
-                    { time_button(self.time, 1.5, ctx)}
-                    { time_button(self.time, 2.0, ctx)}
-                    { time_button(self.time, 3.0, ctx)}
-                    { time_button(self.time, 5.0, ctx)}
-                    { time_button(self.time, 7.0, ctx)}
+                    { time_button(selected, 1.0, ctx)}
+                    { time_button(selected, 1.5, ctx)}
+                    { time_button(selected, 2.0, ctx)}
+                    { time_button(selected, 3.0, ctx)}
+                    { time_button(selected, 5.0, ctx)}
+                    { time_button(selected, 7.0, ctx)}
                 </div>
                 <div>
-                    { time_button(self.time, 10.0, ctx)}
-                    { time_button(self.time, 15.0, ctx)}
-                    { time_button(self.time, 20.0, ctx)}
-                    { time_button(self.time, 30.0, ctx)}
-                    { time_button(self.time, 40.0, ctx)}
-                    { time_button(self.time, 60.0, ctx)}
+                    { time_button(selected, 10.0, ctx)}
+                    { time_button(selected, 15.0, ctx)}
+                    { time_button(selected, 20.0, ctx)}
+                    { time_button(selected, 30.0, ctx)}
+                    { time_button(selected, 40.0, ctx)}
+                    { time_button(selected, 60.0, ctx)}
                 </div>
                 <div>
-                    { time_button(self.time, 90.0, ctx)}
-                    { time_button(self.time, 2.0*60.0, ctx)}
-                    { time_button(self.time, 3.0*60.0, ctx)}
-                    { time_button(self.time, 5.0*60.0, ctx)}
-                    { time_button(self.time, 7.0*60.0, ctx)}
-                    { time_button(self.time, 10.0*60.0, ctx)}
+                    { time_button(selected, 90.0, ctx)}
+                    { time_button(selected, 2.0*60.0, ctx)}
+                    { time_button(selected, 3.0*60.0, ctx)}
+                    { time_button(selected, 5.0*60.0, ctx)}
+                    { time_button(selected, 7.0*60.0, ctx)}
+                    { time_button(selected, 10.0*60.0, ctx)}
                 </div>
             </div>
         }

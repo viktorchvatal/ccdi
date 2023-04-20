@@ -10,7 +10,7 @@ use crate::RgbImage;
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum ClientMessage {
     View(ViewState),
-    RgbImage(RgbImage<u16>),
+    RgbImage(Arc<RgbImage<u16>>),
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
@@ -23,13 +23,36 @@ pub struct RawImage {
 pub struct ViewState {
     pub detail: String,
     pub status: LogicStatus,
-    pub camera_properties: Option<Arc<ImagerProperties>>
+    pub camera_properties: Option<Arc<ImagerProperties>>,
+    pub gain: u16,
+    pub time: f64,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Serialize, Deserialize, Default)]
+impl Default for ViewState {
+    fn default() -> Self {
+        Self {
+            detail: String::new(),
+            status: Default::default(),
+            camera_properties: None,
+            gain: 0,
+            time: 1.0
+        }
+    }
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub struct LogicStatus {
     pub camera: ConnectionState,
     pub exposure: ConnectionState,
+}
+
+impl Default for LogicStatus {
+    fn default() -> Self {
+        Self {
+            camera: ConnectionState::Disconnected,
+            exposure: ConnectionState::Disconnected
+        }
+    }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Serialize, Deserialize)]

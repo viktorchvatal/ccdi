@@ -1,7 +1,7 @@
 
-use std::mem::swap;
+use std::{mem::swap, sync::Arc};
 
-use ccdi_common::{ExposureCommand, ClientMessage, RawImage, debayer_scale_fast};
+use ccdi_common::{ExposureCommand, ClientMessage, RawImage, debayer_scale_fast, RgbImage};
 use ccdi_imager_interface::{BasicProperties, ImagerDevice, ExposureParams, ExposureArea};
 use log::debug;
 use nanocv::ImgSize;
@@ -13,6 +13,7 @@ pub struct ExposureController {
     gain: u16,
     time: f64,
     current_exposure: Option<ExposureParams>,
+    last_image: Option<Arc<RgbImage<u16>>>,
 }
 
 impl ExposureController {
@@ -21,7 +22,8 @@ impl ExposureController {
             properties,
             gain: 0,
             time: 1.0,
-            current_exposure: None
+            current_exposure: None,
+            last_image: None,
         }
     }
 
@@ -37,9 +39,10 @@ impl ExposureController {
             if let Some(params) = exposure {
                 let data = device.download_image(&params)?;
                 let raw_image = RawImage { params, data };
-                // TODO: Compute size
                 debug!("Image downloaded");
-                let rgb_image = debayer_scale_fast(&raw_image, ImgSize::new(900, 600));
+                // TODO: Compute size
+                let rgb_image = Arc::new(debayer_scale_fast(&raw_image, ImgSize::new(900, 600)));
+                self.last_image = Some(rgb_image.clone());
                 debug!("Image resized");
                 Ok(vec![ClientMessage::RgbImage(rgb_image)])
             } else {
@@ -64,6 +67,10 @@ impl ExposureController {
 
     pub fn exposure_active(&self) -> bool {
         self.current_exposure.is_some()
+    }
+
+    pub fn last_image(&self) -> Option<Arc<RgbImage<u16>>> {
+        self.last_image.clone()
     }
 }
 

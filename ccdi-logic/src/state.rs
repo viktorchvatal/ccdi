@@ -27,11 +27,17 @@ impl BackendState {
         Ok(match message {
             ExposureMessage(command) => {
                 self.camera.exposure_command(command);
-                vec![]
+                vec![ClientMessage::View(self.camera.get_view())]
             },
-            ClientConnected => vec![
-                ClientMessage::View(self.camera.get_view()),
-            ]
+            ClientConnected => {
+                let view_msg = ClientMessage::View(self.camera.get_view());
+                let last_image = self.camera.last_image();
+
+                match last_image {
+                    None => vec![view_msg],
+                    Some(image) => vec![view_msg, ClientMessage::RgbImage(image)],
+                }
+            }
         })
     }
 
