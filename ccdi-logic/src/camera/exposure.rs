@@ -1,7 +1,7 @@
 
-use std::{mem::swap, sync::Arc};
+use std::{mem::swap, sync::{mpsc::Sender}};
 
-use ccdi_common::{ExposureCommand, ClientMessage, RawImage, debayer_scale_fast, RgbImage};
+use ccdi_common::{ExposureCommand, ClientMessage, RawImage, ProcessMessage, ConvertRawImage, log_err};
 use ccdi_imager_interface::{BasicProperties, ImagerDevice, ExposureParams, ExposureArea};
 use log::debug;
 use nanocv::ImgSize;
@@ -13,17 +13,17 @@ pub struct ExposureController {
     gain: u16,
     time: f64,
     current_exposure: Option<ExposureParams>,
-    last_image: Option<Arc<RgbImage<u16>>>,
+    process_tx: Sender<ProcessMessage>,
 }
 
 impl ExposureController {
-    pub fn new(properties: BasicProperties) -> Self {
+    pub fn new(properties: BasicProperties, process_tx: Sender<ProcessMessage>) -> Self {
         Self {
             properties,
             gain: 0,
             time: 1.0,
             current_exposure: None,
-            last_image: None,
+            process_tx
         }
     }
 
@@ -40,17 +40,11 @@ impl ExposureController {
                 let data = device.download_image(&params)?;
                 let raw_image = RawImage { params, data };
                 debug!("Image downloaded");
-                // TODO: Compute size
-                let rgb_image = Arc::new(debayer_scale_fast(&raw_image, ImgSize::new(900, 600)));
-                self.last_image = Some(rgb_image.clone());
-                debug!("Image resized");
-                Ok(vec![ClientMessage::RgbImage(rgb_image)])
-            } else {
-                Ok(vec![])
+                self.call_process_message(raw_image);
             }
-        } else {
-            Ok(vec![])
         }
+
+        Ok(vec![])
     }
 
     pub fn exposure_command(
@@ -68,15 +62,17 @@ impl ExposureController {
     pub fn exposure_active(&self) -> bool {
         self.current_exposure.is_some()
     }
-
-    pub fn last_image(&self) -> Option<Arc<RgbImage<u16>>> {
-        self.last_image.clone()
-    }
 }
 
 // =========================================== PRIVATE =============================================
 
 impl ExposureController {
+    fn call_process_message(&self, image: RawImage) {
+        let size = ImgSize::new(900, 600);
+        let message = ProcessMessage::ConvertRawImage(ConvertRawImage{image, size});
+        log_err("Self process message", self.process_tx.send(message));
+    }
+
     fn start_exposure(&mut self, device: &mut dyn ImagerDevice) -> Result<(), String> {
         debug!("Starting exposure");
         if self.current_exposure.is_some() {

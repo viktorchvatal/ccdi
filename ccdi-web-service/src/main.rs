@@ -4,10 +4,12 @@ mod config;
 mod static_files;
 
 use ccdi_common::ClientMessage;
+use ccdi_common::ProcessMessage;
 use ccdi_common::StateMessage;
 use ccdi_common::init_logger;
 use ccdi_logic::LogicConfig;
 use ccdi_logic::start_logic_thread;
+use ccdi_logic::start_process_thread;
 use config::ServiceConfig;
 use static_files::static_files_rules;
 use tokio::sync::mpsc;
@@ -31,7 +33,10 @@ fn main() {
 
     let (server_tx, server_rx) = std::sync::mpsc::channel::<StateMessage>();
     let (clients_tx, clients_rx) = std::sync::mpsc::channel::<ClientMessage>();
-    let _server_thread = start_logic_thread(logic_config, server_rx, clients_tx);
+    let (process_tx, process_rx) = std::sync::mpsc::channel::<ProcessMessage>();
+
+    let _process_thread = start_process_thread(process_rx, clients_tx.clone(), server_tx.clone());
+    let _server_thread = start_logic_thread(logic_config, server_rx, clients_tx, process_tx);
 
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()

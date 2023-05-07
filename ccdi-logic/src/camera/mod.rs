@@ -2,9 +2,11 @@ mod properties;
 mod exposure;
 mod connected;
 
-use std::sync::Arc;
+use std::sync::{mpsc::Sender};
 
-use ccdi_common::{ConnectionState, ViewState, LogicStatus, ExposureCommand, ClientMessage, RgbImage};
+use ccdi_common::{
+    ConnectionState, ViewState, LogicStatus, ExposureCommand, ClientMessage, ProcessMessage
+};
 use ccdi_imager_interface::{ImagerDriver, DeviceDescriptor};
 use log::{info};
 
@@ -20,10 +22,11 @@ pub struct CameraController {
     view: Option<ViewState>,
     last_gain: u16,
     last_time: f64,
+    process_tx: Sender<ProcessMessage>
 }
 
 impl CameraController {
-    pub fn new(driver: Box<dyn ImagerDriver>) -> Self {
+    pub fn new(driver: Box<dyn ImagerDriver>, process_tx: Sender<ProcessMessage>) -> Self {
         Self {
             driver,
             state: State::Error,
@@ -32,6 +35,7 @@ impl CameraController {
             view: None,
             last_gain: 0,
             last_time: 1.0,
+            process_tx,
         }
     }
 
@@ -75,10 +79,6 @@ impl CameraController {
             gain: self.last_gain,
             time: self.last_time,
         }
-    }
-
-    pub fn last_image(&self) -> Option<Arc<RgbImage<u16>>> {
-        self.connected.as_ref().and_then(|camera| camera.last_image())
     }
 
     pub fn exposure_command(&mut self, command: ExposureCommand) {
@@ -147,7 +147,7 @@ impl CameraController {
             },
             Ok(device) => {
                 self.set_detail("Device connected, reading basic info");
-                match ConnectedCameraController::new(device) {
+                match ConnectedCameraController::new(device, self.process_tx.clone()) {
                     Ok(connected) => {
                         self.set_detail("Camera initialized");
                         self.connected = Some(connected);

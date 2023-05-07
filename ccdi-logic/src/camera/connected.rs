@@ -1,6 +1,6 @@
-use std::sync::Arc;
+use std::sync::{Arc, mpsc::Sender};
 
-use ccdi_common::{ExposureCommand, ClientMessage, ConnectionState, RgbImage};
+use ccdi_common::{ExposureCommand, ClientMessage, ConnectionState, ProcessMessage};
 use ccdi_imager_interface::{ImagerDevice, ImagerProperties};
 
 use super::{properties::{PropertiesController}, exposure::ExposureController};
@@ -17,9 +17,10 @@ pub struct ConnectedCameraController {
 impl ConnectedCameraController {
     pub fn new(
         mut device: Box<dyn ImagerDevice>,
+        process_tx: Sender<ProcessMessage>
     ) -> Result<Self, String> {
         let properties = PropertiesController::new(device.as_mut())?;
-        let exposure = ExposureController::new(properties.get_properties().basic);
+        let exposure = ExposureController::new(properties.get_properties().basic, process_tx);
         Ok(Self {properties, exposure, device, messages: vec![]})
     }
 
@@ -55,9 +56,5 @@ impl ConnectedCameraController {
             false => ConnectionState::Disconnected,
             true => ConnectionState::Established
         }
-    }
-
-    pub fn last_image(&self) -> Option<Arc<RgbImage<u16>>> {
-        self.exposure.last_image()
     }
 }

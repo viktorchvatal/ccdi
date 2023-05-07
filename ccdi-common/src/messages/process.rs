@@ -1,21 +1,18 @@
-use std::sync::Arc;
-
+use nanocv::ImgSize;
 use serde_derive::{Serialize, Deserialize};
 
-use crate::RgbImage;
+use crate::RawImage;
 
 // ============================================ PUBLIC =============================================
 
+/// Message for image processing thread
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
-pub enum StateMessage {
-    ExposureMessage(ExposureCommand),
-    ClientConnected,
-    ImageDisplayed(Arc<RgbImage<u16>>),
+pub enum ProcessMessage {
+    ConvertRawImage(ConvertRawImage),
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
-pub enum ExposureCommand {
-    Start,
-    SetGain(u16),
-    SetTime(f64),
+pub struct ConvertRawImage {
+    pub image: RawImage,
+    pub size: ImgSize,
 }

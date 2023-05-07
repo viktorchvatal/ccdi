@@ -1,22 +1,28 @@
-use ccdi_common::{ClientMessage, StateMessage};
+use std::sync::{Arc, mpsc::Sender};
+
+use ccdi_common::{ClientMessage, StateMessage, RgbImage, ProcessMessage};
 
 use crate::camera::CameraController;
 
 // ============================================ PUBLIC =============================================
 
 pub struct BackendState {
-    camera: CameraController
+    camera: CameraController,
+    /// Last image sent to clients
+    image: Option<Arc<RgbImage<u16>>>,
 }
 
 impl BackendState {
-    pub fn new(demo_mode: bool) -> Self {
+    pub fn new(demo_mode: bool, process_tx: Sender<ProcessMessage>) -> Self {
         Self {
             camera: CameraController::new(
                 match demo_mode {
                     false => Box::new(ccdi_imager_moravian::MoravianImagerDriver::new()),
                     true => Box::new(ccdi_imager_demo::DemoImagerDriver::new()),
-                }
-            )
+                },
+                process_tx
+            ),
+            image: None,
         }
     }
 
@@ -25,17 +31,20 @@ impl BackendState {
         use StateMessage::*;
 
         Ok(match message {
+            ImageDisplayed(image) => {
+                self.image = Some(image);
+                vec![]
+            },
             ExposureMessage(command) => {
                 self.camera.exposure_command(command);
                 vec![ClientMessage::View(self.camera.get_view())]
             },
             ClientConnected => {
                 let view_msg = ClientMessage::View(self.camera.get_view());
-                let last_image = self.camera.last_image();
 
-                match last_image {
+                match self.image.as_ref() {
                     None => vec![view_msg],
-                    Some(image) => vec![view_msg, ClientMessage::RgbImage(image)],
+                    Some(image) => vec![view_msg, ClientMessage::RgbImage(image.clone())],
                 }
             }
         })
