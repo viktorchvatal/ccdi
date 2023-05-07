@@ -35,6 +35,10 @@ impl BackendState {
                 self.image = Some(image);
                 vec![]
             },
+            CameraParam(message) => {
+                self.camera.update_camera_params(message);
+                vec![]
+            },
             ExposureMessage(command) => {
                 self.camera.exposure_command(command);
                 vec![ClientMessage::View(self.camera.get_view())]

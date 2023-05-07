@@ -1,4 +1,4 @@
-use std::{fmt::Debug, thread, time::Duration};
+use std::{fmt::Debug};
 
 use ccdi_imager_interface::{
     ImagerDriver, ImagerDevice, ImagerProperties, DeviceDescriptor, DeviceProperty, BasicProperties, ExposureParams
@@ -57,8 +57,6 @@ impl ImagerDevice for DemoImagerDevice {
     }
 
     fn download_image(&mut self, params: &ExposureParams) -> Result<Vec<u16>, String> {
-        thread::sleep(Duration::from_millis(1000));
-
         Ok(
             (0..(params.area.pixel_count()))
                 .map(|x| ((x/30) % 12000) as u16)

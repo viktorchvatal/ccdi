@@ -9,6 +9,7 @@ use crate::RgbImage;
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum StateMessage {
     ExposureMessage(ExposureCommand),
+    CameraParam(CameraParamMessage),
     ClientConnected,
     ImageDisplayed(Arc<RgbImage<u16>>),
 }
@@ -16,6 +17,19 @@ pub enum StateMessage {
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum ExposureCommand {
     Start,
+}
+
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
+pub enum CameraParamMessage {
     SetGain(u16),
     SetTime(f64),
+    SetRenderingType(RenderingType),
+}
+
+
+#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
+pub enum RenderingType {
+    FullImage,
+    Center1x,
+    Corners1x,
 }

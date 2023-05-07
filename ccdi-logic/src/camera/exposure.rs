@@ -1,7 +1,10 @@
 
 use std::{mem::swap, sync::{mpsc::Sender}};
 
-use ccdi_common::{ExposureCommand, ClientMessage, RawImage, ProcessMessage, ConvertRawImage, log_err};
+use ccdi_common::{
+    ExposureCommand, ClientMessage, RawImage, ProcessMessage, ConvertRawImage, log_err,
+    CameraParams
+};
 use ccdi_imager_interface::{BasicProperties, ImagerDevice, ExposureParams, ExposureArea};
 use log::debug;
 use nanocv::ImgSize;
@@ -10,8 +13,7 @@ use nanocv::ImgSize;
 
 pub struct ExposureController {
     properties: BasicProperties,
-    gain: u16,
-    time: f64,
+    camera_params: CameraParams,
     current_exposure: Option<ExposureParams>,
     process_tx: Sender<ProcessMessage>,
 }
@@ -20,8 +22,7 @@ impl ExposureController {
     pub fn new(properties: BasicProperties, process_tx: Sender<ProcessMessage>) -> Self {
         Self {
             properties,
-            gain: 0,
-            time: 1.0,
+            camera_params: Default::default(),
             current_exposure: None,
             process_tx
         }
@@ -47,6 +48,10 @@ impl ExposureController {
         Ok(vec![])
     }
 
+    pub fn update_camera_params(&mut self, params: CameraParams) {
+        self.camera_params = params;
+    }
+
     pub fn exposure_command(
         &mut self,
         device: &mut dyn ImagerDevice,
@@ -54,8 +59,6 @@ impl ExposureController {
     ) -> Result<(), String> {
         Ok(match command {
             ExposureCommand::Start => self.start_exposure(device)?,
-            ExposureCommand::SetGain(gain) => self.gain = gain,
-            ExposureCommand::SetTime(time) => self.time = time,
         })
     }
 
@@ -69,7 +72,8 @@ impl ExposureController {
 impl ExposureController {
     fn call_process_message(&self, image: RawImage) {
         let size = ImgSize::new(900, 600);
-        let message = ProcessMessage::ConvertRawImage(ConvertRawImage{image, size});
+        let rendering = self.camera_params.rendering;
+        let message = ProcessMessage::ConvertRawImage(ConvertRawImage{image, size, rendering});
         log_err("Self process message", self.process_tx.send(message));
     }
 
@@ -92,8 +96,8 @@ impl ExposureController {
 
     fn make_exposure_description(&self) -> ExposureParams {
         ExposureParams {
-            gain: self.gain,
-            time: self.time,
+            gain: self.camera_params.gain,
+            time: self.camera_params.time,
             area: ExposureArea {
                 x: 0,
                 y: 0,

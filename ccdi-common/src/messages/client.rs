@@ -3,7 +3,7 @@ use std::sync::Arc;
 use ccdi_imager_interface::{ImagerProperties, ExposureParams};
 use serde_derive::{Serialize, Deserialize};
 
-use crate::RgbImage;
+use crate::{RgbImage, RenderingType};
 
 // ============================================ PUBLIC =============================================
 
@@ -24,8 +24,7 @@ pub struct ViewState {
     pub detail: String,
     pub status: LogicStatus,
     pub camera_properties: Option<Arc<ImagerProperties>>,
-    pub gain: u16,
-    pub time: f64,
+    pub camera_params: CameraParams,
 }
 
 impl Default for ViewState {
@@ -34,8 +33,24 @@ impl Default for ViewState {
             detail: String::new(),
             status: Default::default(),
             camera_properties: None,
+            camera_params: Default::default(),
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
+pub struct CameraParams {
+    pub gain: u16,
+    pub time: f64,
+    pub rendering: RenderingType,
+}
+
+impl Default for CameraParams {
+    fn default() -> Self {
+        Self {
             gain: 0,
-            time: 1.0
+            time: 1.0,
+            rendering: RenderingType::FullImage,
         }
     }
 }

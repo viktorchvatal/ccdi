@@ -1,7 +1,7 @@
 use nanocv::ImgSize;
 use serde_derive::{Serialize, Deserialize};
 
-use crate::RawImage;
+use crate::{RawImage, RenderingType};
 
 // ============================================ PUBLIC =============================================
 
@@ -15,4 +15,5 @@ pub enum ProcessMessage {
 pub struct ConvertRawImage {
     pub image: RawImage,
     pub size: ImgSize,
+    pub rendering: RenderingType,
 }

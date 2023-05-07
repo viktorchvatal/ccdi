@@ -7,6 +7,7 @@ mod connection;
 mod picture;
 mod gain;
 mod time;
+mod rendering;
 
 use std::sync::Arc;
 
@@ -24,6 +25,7 @@ use crate::camera::CameraDetail;
 use crate::gain::GainSelector;
 use crate::menu::{Menu, MenuItem};
 use crate::picture::Picture;
+use crate::rendering::RenderingSelector;
 use crate::status_bar::StatusBar;
 use crate::footer::Footer;
 use crate::time::TimeSelector;
@@ -36,12 +38,11 @@ pub enum Msg {
     MessageReceived(ClientMessage),
     SendMessage(StateMessage),
     Action(UserAction),
+    ParamUpdate(CameraParamMessage),
 }
 
 pub enum UserAction {
     MenuClick(MenuItem),
-    SetGain(u16),
-    SetExposure(f64),
 }
 
 pub struct Main {
@@ -107,22 +108,16 @@ impl Component for Main {
             Msg::ConnectionState(state) => {
                 self.connection_state = state;
                 true
+            },
+            Msg::ParamUpdate(message) => {
+                ctx.link().send_message(Msg::SendMessage(StateMessage::CameraParam(message)));
+                false
             }
             Msg::Action(action) => {
                 match action {
                     UserAction::MenuClick(menuitem) => {
                         self.selected_menu = menuitem;
                     },
-                    UserAction::SetExposure(exposure) => {
-                        ctx.link().send_message(Msg::SendMessage(
-                            StateMessage::ExposureMessage(ExposureCommand::SetTime(exposure))
-                        ));
-                    },
-                    UserAction::SetGain(gain) => {
-                        ctx.link().send_message(Msg::SendMessage(
-                            StateMessage::ExposureMessage(ExposureCommand::SetGain(gain))
-                        ));
-                    }
                 }
                 true
             }
@@ -146,11 +141,15 @@ impl Component for Main {
         );
 
         let gain_changed = ctx.link().callback(
-            |gain: u16| Msg::Action(UserAction::SetGain(gain))
+            |gain: u16| Msg::ParamUpdate(CameraParamMessage::SetGain(gain))
         );
 
         let time_changed = ctx.link().callback(
-            |time: f64| Msg::Action(UserAction::SetExposure(time))
+            |time: f64| Msg::ParamUpdate(CameraParamMessage::SetTime(time))
+        );
+
+        let rendering_changed = ctx.link().callback(
+            |value: RenderingType| Msg::ParamUpdate(CameraParamMessage::SetRenderingType(value))
         );
 
         html! {
@@ -166,8 +165,18 @@ impl Component for Main {
                         <Picture image={self.image.clone()} />
                     </div>
                     <div class="main-tool-column">
-                        <GainSelector gain_changed={gain_changed} selected_gain={self.view_state.gain} />
-                        <TimeSelector time_changed={time_changed} selected_time={self.view_state.time} />
+                        <GainSelector
+                            gain_changed={gain_changed}
+                            selected_gain={self.view_state.camera_params.gain}
+                        />
+                        <TimeSelector
+                            time_changed={time_changed}
+                            selected_time={self.view_state.camera_params.time}
+                        />
+                        <RenderingSelector
+                            rendering_changed={rendering_changed}
+                            selected_value={self.view_state.camera_params.rendering}
+                        />
                         { self.render_tool(ctx) }
                     </div>
                 </div>

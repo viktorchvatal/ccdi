@@ -1,6 +1,6 @@
 use std::sync::{Arc, mpsc::Sender};
 
-use ccdi_common::{ExposureCommand, ClientMessage, ConnectionState, ProcessMessage};
+use ccdi_common::{ExposureCommand, ClientMessage, ConnectionState, ProcessMessage, CameraParams};
 use ccdi_imager_interface::{ImagerDevice, ImagerProperties};
 
 use super::{properties::{PropertiesController}, exposure::ExposureController};
@@ -38,6 +38,10 @@ impl ConnectedCameraController {
 
     pub fn get_properties(&self) -> Arc<ImagerProperties> {
         self.properties.get_properties()
+    }
+
+    pub fn update_camera_params(&mut self, params: CameraParams) {
+        self.exposure.update_camera_params(params);
     }
 
     pub fn exposure_command(&mut self, command: ExposureCommand) -> Result<(), String> {

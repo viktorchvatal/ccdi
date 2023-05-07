@@ -5,7 +5,8 @@ mod connected;
 use std::sync::{mpsc::Sender};
 
 use ccdi_common::{
-    ConnectionState, ViewState, LogicStatus, ExposureCommand, ClientMessage, ProcessMessage
+    ConnectionState, ViewState, LogicStatus, ExposureCommand, ClientMessage, ProcessMessage,
+    CameraParams, CameraParamMessage
 };
 use ccdi_imager_interface::{ImagerDriver, DeviceDescriptor};
 use log::{info};
@@ -20,8 +21,7 @@ pub struct CameraController {
     detail: String,
     connected: Option<ConnectedCameraController>,
     view: Option<ViewState>,
-    last_gain: u16,
-    last_time: f64,
+    camera_params: CameraParams,
     process_tx: Sender<ProcessMessage>
 }
 
@@ -33,8 +33,7 @@ impl CameraController {
             connected: None,
             detail: String::from("Started"),
             view: None,
-            last_gain: 0,
-            last_time: 1.0,
+            camera_params: Default::default(),
             process_tx,
         }
     }
@@ -76,18 +75,25 @@ impl CameraController {
                     .unwrap_or(ConnectionState::Disconnected)
             },
             camera_properties: self.connected.as_ref().map(|cam| cam.get_properties()),
-            gain: self.last_gain,
-            time: self.last_time,
+            camera_params: self.camera_params.clone(),
+        }
+    }
+
+    pub fn update_camera_params(&mut self, message: CameraParamMessage) {
+        use CameraParamMessage::*;
+
+        match message {
+            SetGain(gain) => self.camera_params.gain = gain,
+            SetTime(time) => self.camera_params.time = time,
+            SetRenderingType(rendering) => self.camera_params.rendering = rendering,
+        }
+
+        if let Some(camera) =  self.connected.as_mut() {
+            camera.update_camera_params(self.camera_params.clone());
         }
     }
 
     pub fn exposure_command(&mut self, command: ExposureCommand) {
-        match command {
-            ExposureCommand::SetGain(gain) => self.last_gain = gain,
-            ExposureCommand::SetTime(time) => self.last_time = time,
-            _ => {},
-        }
-
         match self.connected.as_mut() {
             None => self.set_detail("Not connected - cannot handle exposure command"),
             Some(connected) => match connected.exposure_command(command) {
