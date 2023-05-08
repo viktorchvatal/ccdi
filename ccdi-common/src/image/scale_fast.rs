@@ -1,50 +1,65 @@
 use nanocv::{ImgSize, ImgBuf, ImgMut};
 
-use crate::{RawImage, RgbImage};
+use crate::{RawImage, RgbImage, RenderingType};
+
+use super::lookup::{Offset, LookupTable, scale_lookup_table};
 
 // ============================================ PUBLIC =============================================
 
-pub fn debayer_scale_fast(input: &RawImage, size: ImgSize) -> RgbImage<u16> {
-    let r = resize_channel(input, size, 1, 0);
-    let g = resize_channel(input, size, 1, 1);
-    let b = resize_channel(input, size, 0, 1);
+pub fn debayer_scale_fast(
+    input: &RawImage, size: ImgSize, rendering: RenderingType
+) -> RgbImage<u16> {
+    let offsets = &OFFSET_GRBG;
+    let r = resize_channel(input, size, offsets.r, rendering);
+    let g = resize_channel(input, size, offsets.g1, rendering);
+    let b = resize_channel(input, size, offsets.b, rendering);
     RgbImage::from(r, g, b).expect("Logic error")
 }
 
 // =========================================== PRIVATE =============================================
 
-pub fn resize_channel(
+fn resize_channel(
     image: &RawImage,
-    size: ImgSize,
-    offset_x: usize,
-    offset_y: usize,
+    output_size: ImgSize,
+    offset: Offset,
+    rendering: RenderingType
 ) -> ImgBuf<u16> {
-    let (w, h) = (image.params.area.width, image.params.area.height);
-    let x_indices = scale_index_table(w, size.x, offset_x, false);
-    let y_indices = scale_index_table(h, size.y, offset_y, true);
+    let input_size = ImgSize::new(image.params.area.width, image.params.area.height);
+    let lookup = scale_lookup_table(input_size, output_size, offset, rendering);
+    scale_with_lookup_table(image, &lookup)
+}
+
+fn scale_with_lookup_table(image: &RawImage, table: &LookupTable) -> ImgBuf<u16> {
+    let w = image.params.area.width;
+    let size = ImgSize::new(table.x.len(), table.y.len());
     let mut result = ImgBuf::<u16>::new_init(size, Default::default());
 
     for line in 0..size.y {
         let dst = result.line_mut(line);
-        let input_line = y_indices[line];
+        let input_line = &table.y[line];
         let src = &image.data[input_line*w .. (input_line + 1)*w];
 
         for x in 0..size.x {
-            dst[x] = src[x_indices[x]];
+            dst[x] = src[table.x[x]];
         }
     }
 
     result
 }
 
-fn scale_index_table(
-    source_size: usize,
-    target_size: usize,
-    offset: usize,
-    reverse: bool,
-) -> Vec<usize> {
-    (0..target_size)
-        .map(|x| if reverse { target_size - x - 1 } else { x })
-        .map(|x| (x*source_size/2/target_size)*2 + offset)
-        .collect()
+#[derive(Clone, Copy, PartialEq)]
+struct ChannelOffsets {
+    r: Offset,
+    g1: Offset,
+    g2: Offset,
+    b: Offset
 }
+
+const OFFSET_GRBG: ChannelOffsets = ChannelOffsets {
+    r: Offset { x: 1, y: 0 },
+    g1: Offset { x: 1, y: 1 },
+    g2: Offset { x: 0, y: 0 },
+    b: Offset { x: 0, y: 1 },
+};
+
+

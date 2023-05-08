@@ -37,7 +37,7 @@ impl Component for RenderingSelector {
 
         html! {
             <div>
-                <p>{"Set camera gain"}</p>
+                <p>{"View transformation"}</p>
                 { rendering_button(selected, RenderingType::FullImage, "Full Image", ctx)}
                 { rendering_button(selected, RenderingType::Center1x, "Center 1:1", ctx)}
                 { rendering_button(selected, RenderingType::Corners1x, "Corners 1:1", ctx)}

@@ -15,6 +15,6 @@ pub fn handle_process_message(message: ProcessMessage) -> Vec<ClientMessage> {
 // =========================================== PRIVATE =============================================
 
 fn convert_raw_image(message: ConvertRawImage) -> ClientMessage {
-    let rgb_image = Arc::new(debayer_scale_fast(&message.image, message.size));
+    let rgb_image = Arc::new(debayer_scale_fast(&message.image, message.size, message.rendering));
     ClientMessage::RgbImage(rgb_image)
 }
