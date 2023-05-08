@@ -1,4 +1,4 @@
-use nanocv::{ImgBuf, Img};
+use nanocv::{ImgBuf, Img, ImgMut};
 use serde_derive::{Serialize, Deserialize};
 
 // ============================================ PUBLIC =============================================
@@ -47,5 +47,21 @@ impl<T> RgbImage<T> {
 
     pub fn blue(&self) -> &dyn Img<T> {
         &self.b
+    }
+
+    pub fn red_mut(&mut self) -> &mut dyn ImgMut<T> {
+        &mut self.r
+    }
+
+    pub fn green_mut(&mut self) -> &mut dyn ImgMut<T> {
+        &mut self.g
+    }
+
+    pub fn blue_mut(&mut self) -> &mut dyn ImgMut<T> {
+        &mut self.b
+    }
+
+    pub fn channels_mut(&mut self) -> [&mut dyn ImgMut<T>; 3] {
+        [&mut self.r, &mut self.g, &mut self.b]
     }
 }

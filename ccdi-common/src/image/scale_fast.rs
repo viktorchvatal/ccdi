@@ -2,7 +2,7 @@ use nanocv::{ImgSize, ImgBuf, ImgMut};
 
 use crate::{RawImage, RgbImage, RenderingType};
 
-use super::lookup::{Offset, LookupTable, scale_lookup_table};
+use super::{lookup::{Offset, LookupTable, scale_lookup_table}, grid::draw_thirds_grid};
 
 // ============================================ PUBLIC =============================================
 
@@ -13,7 +13,13 @@ pub fn debayer_scale_fast(
     let r = resize_channel(input, size, offsets.r, rendering);
     let g = resize_channel(input, size, offsets.g1, rendering);
     let b = resize_channel(input, size, offsets.b, rendering);
-    RgbImage::from(r, g, b).expect("Logic error")
+    let mut image = RgbImage::from(r, g, b).expect("Logic error");
+
+    if rendering == RenderingType::Corners1x {
+        draw_thirds_grid(&mut image);
+    }
+
+    image
 }
 
 // =========================================== PRIVATE =============================================
