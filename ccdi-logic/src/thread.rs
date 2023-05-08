@@ -1,10 +1,10 @@
-use std::{thread::{self, JoinHandle}, time::Duration, sync::mpsc::RecvTimeoutError};
+use std::{thread::{self, JoinHandle}, time::Duration, sync::{mpsc::RecvTimeoutError, Arc}};
 use std::sync::mpsc::{Sender, Receiver};
 
-use ccdi_common::{StateMessage, ClientMessage, log_err, ProcessMessage};
-use log::{debug};
+use ccdi_common::{StateMessage, ClientMessage, log_err, ProcessMessage, StorageMessage};
+use log::{error, debug};
 
-use crate::{state::BackendState, convert::handle_process_message};
+use crate::{state::BackendState, convert::handle_process_message, ServiceConfig, storage::Storage};
 
 // ============================================ PUBLIC =============================================
 
@@ -67,6 +67,41 @@ pub fn start_process_thread(
                     },
                     // Last sender disconnected - exit thread
                     Err(_) => return,
+                }
+            }
+        })
+        .map_err(|err| format!("{:?}", err))
+}
+
+pub fn start_storage_thread(
+    config: Arc<ServiceConfig>,
+    storage_rx: Receiver<StorageMessage>,
+    server_tx: Sender<StateMessage>,
+) -> Result<JoinHandle<()>, String> {
+    thread::Builder::new()
+        .name("logic".to_string())
+        .spawn(move || {
+            let mut storage = Storage::new(config);
+
+            let send_results = |result: Result<Vec<StateMessage>, String>| match result {
+                Ok(messages) => {
+                    for message in messages {
+                        log_err("Send message from storage to server", server_tx.send(message));
+                    }
+                },
+                Err(error) => error!(
+                    "Processing storage messages or periadic task failed: {}", error
+                )
+            };
+
+            loop {
+                match storage_rx.recv_timeout(Duration::from_millis(1000)) {
+                    // Process the received message
+                    Ok(message) => send_results(storage.process(message)),
+                    // Last sender disconnected - exit thread
+                    Err(RecvTimeoutError::Disconnected) => return,
+                    // No messages received within timeout - perform periodic tasks
+                    Err(RecvTimeoutError::Timeout) => send_results(storage.periodic_tasks()),
                 }
             }
         })
