@@ -40,6 +40,7 @@ impl Default for ViewState {
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct CameraParams {
+    pub loop_enabled: bool,
     pub gain: u16,
     pub time: f64,
     pub rendering: RenderingType,
@@ -48,6 +49,7 @@ pub struct CameraParams {
 impl Default for CameraParams {
     fn default() -> Self {
         Self {
+            loop_enabled: false,
             gain: 0,
             time: 1.0,
             rendering: RenderingType::FullImage,

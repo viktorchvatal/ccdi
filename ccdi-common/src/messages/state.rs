@@ -21,6 +21,7 @@ pub enum ExposureCommand {
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum CameraParamMessage {
+    EnableLoop(bool),
     SetGain(u16),
     SetTime(f64),
     SetRenderingType(RenderingType),

@@ -83,6 +83,7 @@ impl CameraController {
         use CameraParamMessage::*;
 
         match message {
+            EnableLoop(value) => self.camera_params.loop_enabled = value,
             SetGain(gain) => self.camera_params.gain = gain,
             SetTime(time) => self.camera_params.time = time,
             SetRenderingType(rendering) => self.camera_params.rendering = rendering,

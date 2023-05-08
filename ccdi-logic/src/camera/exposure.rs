@@ -45,6 +45,10 @@ impl ExposureController {
             }
         }
 
+        if !self.exposure_active() && self.camera_params.loop_enabled {
+            self.start_exposure(device)?;
+        }
+
         Ok(vec![])
     }
 

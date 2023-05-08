@@ -69,7 +69,10 @@ impl Main {
 
         match self.selected_menu {
             MenuItem::Composition => html!{
-                <CompositionDetail on_action={action} />
+                <CompositionDetail
+                    on_action={action}
+                    camera_params={self.view_state.camera_params.clone()}
+                />
             },
             MenuItem::Camera => html!{
                 <CameraDetail data={self.view_state.camera_properties.clone()} />

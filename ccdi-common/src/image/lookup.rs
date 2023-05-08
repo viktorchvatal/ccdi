@@ -35,7 +35,7 @@ pub fn scale_lookup_table(
 fn apply_offsets(table: LookupTable, offset: Offset) -> LookupTable {
     LookupTable {
         x: table.x.into_iter().map(|x| x*2 + offset.x).collect(),
-        y: table.y.into_iter().rev().map(|x| x*2 + offset.x).collect(),
+        y: table.y.into_iter().rev().map(|y| y*2 + offset.y).collect(),
     }
 }
 
