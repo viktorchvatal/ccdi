@@ -16,3 +16,7 @@ ccdi-common = { path = "../ccdi-common" }
 ccdi-imager-interface = { path = "../ccdi-imager-interface" }
 ccdi-imager-demo = { path = "../ccdi-imager-demo" }
 ccdi-imager-moravian = { path = "../ccdi-imager-moravian" }
+
+
+[dev-dependencies]
+indoc = "1.0.6"

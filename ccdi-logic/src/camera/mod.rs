@@ -6,7 +6,7 @@ use std::sync::{mpsc::Sender};
 
 use ccdi_common::{
     ConnectionState, ViewState, LogicStatus, ExposureCommand, ClientMessage, ProcessMessage,
-    CameraParams, CameraParamMessage
+    CameraParams, CameraParamMessage, StorageState
 };
 use ccdi_imager_interface::{ImagerDriver, DeviceDescriptor};
 use log::{info};
@@ -22,7 +22,8 @@ pub struct CameraController {
     connected: Option<ConnectedCameraController>,
     view: Option<ViewState>,
     camera_params: CameraParams,
-    process_tx: Sender<ProcessMessage>
+    process_tx: Sender<ProcessMessage>,
+    storage_status: StorageState,
 }
 
 impl CameraController {
@@ -35,6 +36,7 @@ impl CameraController {
             view: None,
             camera_params: Default::default(),
             process_tx,
+            storage_status: StorageState::Unknown,
         }
     }
 

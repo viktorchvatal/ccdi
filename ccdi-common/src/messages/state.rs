@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use serde_derive::{Serialize, Deserialize};
 
-use crate::RgbImage;
+use crate::{RgbImage, StorageState};
 
 // ============================================ PUBLIC =============================================
 
@@ -12,6 +12,7 @@ pub enum StateMessage {
     CameraParam(CameraParamMessage),
     ClientConnected,
     ImageDisplayed(Arc<RgbImage<u16>>),
+    UpdateStorageState(StorageState),
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]

@@ -51,6 +51,10 @@ impl BackendState {
                     Some(image) => vec![view_msg, ClientMessage::RgbImage(image.clone())],
                 }
             }
+            UpdateStorageState(storage_state) => {
+                ::log::info!("Storage: {:?}", storage_state);
+                vec![]
+            },
         })
     }
 
