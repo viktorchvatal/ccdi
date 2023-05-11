@@ -29,11 +29,9 @@ already able to take image exposure and present it in the GUI.
 ## Supported platforms
 
 Software now runs on:
- - linux PC (x86_64-unknown-linux-gnu)
- - Raspberry PI 3 (armv7-unknown-linux-gnueabihf)
-
-Planned platforms
- - Raspberry PI 4, but I do not have any sample yet
+ - linux PC (x86_64)
+ - Raspberry PI 3 (armv7)
+ - Raspberry PI 4 (aarch64)
 
 ## Technologies
 
@@ -47,7 +45,7 @@ Project uses following drivers / technologies
 
 In order to build the web service, following debian packages are needed
 
-`apt install libusb-1.0.0-dev llvm-dev libclang-dev clang libcfitsio-dev`
+`apt install libusb-1.0-0-dev llvm-dev libclang-dev clang libcfitsio-dev`
 
 Web service in the repository already contains client WASM binaries compiled
 previously, so it is only needed to build the web service on the target
