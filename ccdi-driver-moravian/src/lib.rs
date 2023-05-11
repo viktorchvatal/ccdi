@@ -95,7 +95,7 @@ impl CameraDriver {
     }
 }
 
-#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+#[cfg(all(target_os = "linux", any(target_arch = "x86_64", target_arch = "aarch64")))]
 fn to_length(length: usize) -> u64 {
     length as u64
 }

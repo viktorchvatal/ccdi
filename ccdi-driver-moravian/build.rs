@@ -12,6 +12,9 @@ const LIB_PATH: &str = "bin/x86_64";
 #[cfg(all(target_os = "linux", target_arch = "arm"))]
 const LIB_PATH: &str = "bin/armv7";
 
+#[cfg(all(target_os = "linux", target_arch = "aarch64"))]
+const LIB_PATH: &str = "bin/aarch64";
+
 fn main() {
     // This is the directory where the `c` library is located.
     // Canonicalize the path as `rustc-link-search` requires an absolute path.
