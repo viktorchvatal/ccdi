@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use std::convert::Infallible;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tokio::sync::mpsc::{self, UnboundedSender};
-use tokio_stream::wrappers::UnboundedReceiverStream;
+use tokio::sync::mpsc::{self, Sender, UnboundedSender};
+use tokio_stream::wrappers::{ReceiverStream};
 
 use futures::{StreamExt, FutureExt};
 use warp::{Error, Reply, Rejection, Filter};
@@ -18,7 +18,7 @@ pub type Clients = Arc<RwLock<ClientSharedState>>;
 pub struct ClientSharedState {
     counter: usize,
     server_tx: UnboundedSender<StateMessage>,
-    transmitters: HashMap<usize, UnboundedSender<Result<Message, Error>>>
+    transmitters: HashMap<usize, Sender<Result<Message, Error>>>
 }
 
 pub fn start_single_async_to_multiple_clients_sender(
@@ -26,14 +26,30 @@ pub fn start_single_async_to_multiple_clients_sender(
     mut async_clients_rx: tokio::sync::mpsc::UnboundedReceiver<ClientMessage>
 ) {
     tokio::spawn(async move {
+        let reconnect = serde_json::to_string(&ClientMessage::Reconnect)
+            .expect("Could not prepare reconnect message");
+
         loop {
             if let Some(message) = async_clients_rx.recv().await {
                 if let Ok(json_string) = serde_json::to_string(&message) {
-                    for transmitter in clients.read().await.transmitters.values() {
-                        log_err(
-                            "Send message to client channel",
-                            transmitter.send(Ok(Message::text(json_string.clone())))
-                        );
+                    for (index, transmitter) in clients.read().await.transmitters.iter() {
+
+                        if transmitter.capacity() < MIN_CAPACITY {
+                            log_err(
+                                "Send reconnect message",
+                                transmitter.try_send(Ok(Message::text(&reconnect)))
+                            );
+                            warn!(
+                                "Client {} queue full (cap {}), instructing to reconnect.",
+                                index, transmitter.capacity()
+                            );
+                        } else {
+                            let payload = Ok(Message::text(json_string.clone()));
+
+                            if let Err(_error) = transmitter.try_send(payload) {
+                                warn!("Error sending message to client {}", index);
+                            }
+                        }
                     }
                 }
             }
@@ -56,6 +72,9 @@ pub fn create_websocket_service(
 
 // =========================================== PRIVATE =============================================
 
+const CAPACITY: usize = 20;
+const MIN_CAPACITY: usize = 5;
+
 async fn ws_handler(ws: Ws, clients: Clients) -> Result<impl Reply, Rejection> {
     Ok(ws.on_upgrade(move |socket| handle_client_connection(socket, clients)))
 }
@@ -71,9 +90,9 @@ async fn handle_client_connection(
     let server_tx = clients.read().await.server_tx.clone();
     let (ws_tx, mut ws_rx) = websocket.split();
 
-    let (client_sender, client_rcv) = mpsc::unbounded_channel::<Result<Message, Error>>();
+    let (client_sender, client_rcv) = mpsc::channel::<Result<Message, Error>>(CAPACITY);
 
-    let client_rcv = UnboundedReceiverStream::new(client_rcv);
+    let client_rcv = ReceiverStream::new(client_rcv);
 
     tokio::task::spawn(client_rcv.forward(ws_tx).map(|result| {
         if let Err(e) = result {
@@ -123,7 +142,7 @@ impl ClientSharedState {
         }
     }
 
-    fn register_client(&mut self, transmitter: UnboundedSender<Result<Message, Error>>) -> usize {
+    fn register_client(&mut self, transmitter: Sender<Result<Message, Error>>) -> usize {
         let id = self.counter;
         self.counter += 1;
         self.transmitters.insert(id, transmitter);

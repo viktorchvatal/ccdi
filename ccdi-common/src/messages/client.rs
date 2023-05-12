@@ -9,6 +9,7 @@ use crate::{RgbImage, RenderingType};
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum ClientMessage {
+    Reconnect,
     View(ViewState),
     RgbImage(Arc<RgbImage<u16>>),
 }

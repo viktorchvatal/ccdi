@@ -94,7 +94,15 @@ impl Component for ConnectionService {
             }
             Msg::DataReceived(reception_result) => {
                 if let Ok(client_message) = reception_result {
-                    ctx.props().on_message.emit(client_message)
+                    if client_message == ClientMessage::Reconnect {
+                        // Our server queue got overwhelmed (client got too slow or just did
+                        // not receive messages, but websocket was still alive).
+                        // Server instructs us to close the websocket and open a new connection
+                        // as more messages may not be sent to prevent full memory
+                        ctx.link().send_message(Msg::Disconnect)
+                    } else {
+                        ctx.props().on_message.emit(client_message)
+                    }
                 }
 
                 false

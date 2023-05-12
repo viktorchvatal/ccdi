@@ -56,6 +56,7 @@ pub struct Main {
 impl Main {
     fn receive_message(&mut self, message: ClientMessage) -> bool {
         match message {
+            ClientMessage::Reconnect => {} // handled elsewhere
             ClientMessage::View(view) => self.view_state = view,
             ClientMessage::RgbImage(image) => self.image = Some(image),
         }
