@@ -19,6 +19,15 @@ pub trait ImagerDevice {
     fn start_exposure(&mut self, params: &ExposureParams) -> Result<(), String>;
     fn image_ready(&mut self, ) -> Result<bool, String>;
     fn download_image(&mut self, params: &ExposureParams) -> Result<Vec<u16>, String>;
+    fn set_temperature(&mut self, request: TemperatureRequest) -> Result<(), String>;
+}
+
+#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
+pub struct TemperatureRequest {
+    /// Desired temperature in degrees celsius
+    pub temperature: f32,
+    /// Desired change speed in degrees celsius per minute
+    pub speed: f32,
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]

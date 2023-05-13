@@ -90,9 +90,24 @@ impl CameraDriver {
     }
 
     pub fn set_gain(&self, gain: u16) -> Result<(), CameraError> {
-        let result = unsafe { gxccd_set_gain(self.camera_ptr, gain) };
-        if result == 0 { Ok(()) } else { Err(CameraError::Unspecified) }
+        convert_simple(unsafe { gxccd_set_gain(self.camera_ptr, gain) })
     }
+
+    pub fn set_temperature(&self, temperature: f32) -> Result<(), CameraError> {
+        convert_simple(unsafe { gxccd_set_temperature(self.camera_ptr, temperature) })
+    }
+
+    pub fn set_temperature_ramp(&self, deg_per_minute: f32) -> Result<(), CameraError> {
+        convert_simple(unsafe { gxccd_set_temperature_ramp(self.camera_ptr, deg_per_minute) })
+    }
+}
+
+fn convert_simple(result: i32) -> Result<(), CameraError> {
+    convert_result((), result)
+}
+
+fn convert_result<T>(value: T, result: i32) -> Result<T, CameraError> {
+    if result == 0 { Ok(value) } else { Err(CameraError::Unspecified) }
 }
 
 #[cfg(all(target_os = "linux", any(target_arch = "x86_64", target_arch = "aarch64")))]

@@ -1,7 +1,7 @@
 use std::{fmt::Debug};
 
 use ccdi_imager_interface::{
-    ImagerDriver, ImagerDevice, ImagerProperties, DeviceDescriptor, DeviceProperty, BasicProperties, ExposureParams
+    ImagerDriver, ImagerDevice, ImagerProperties, DeviceDescriptor, DeviceProperty, BasicProperties, ExposureParams, TemperatureRequest
 };
 
 // ============================================ PUBLIC =============================================
@@ -29,7 +29,7 @@ impl ImagerDriver for DemoImagerDriver {
 }
 
 pub struct DemoImagerDevice {
-    offset: f32
+    offset: f32,
 }
 
 impl ImagerDevice for DemoImagerDevice {
@@ -62,6 +62,11 @@ impl ImagerDevice for DemoImagerDevice {
                 .map(|x| ((x/30) % 12000) as u16)
                 .collect()
         )
+    }
+
+    fn set_temperature(&mut self, request: TemperatureRequest) -> Result<(), String> {
+        dbg!("Setting temperature: ", request.temperature, request.speed);
+        Ok(())
     }
 }
 
