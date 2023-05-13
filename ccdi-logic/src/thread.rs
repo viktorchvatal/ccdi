@@ -8,12 +8,13 @@ use crate::{state::BackendState, convert::handle_process_message, ServiceConfig,
 
 // ============================================ PUBLIC =============================================
 
-pub struct LogicConfig {
+pub struct LogicParams {
     pub demo_mode: bool,
 }
 
 pub fn start_logic_thread(
-    config: LogicConfig,
+    params: LogicParams,
+    config: Arc<ServiceConfig>,
     server_rx: Receiver<StateMessage>,
     clients_tx: Sender<ClientMessage>,
     process_tx: Sender<ProcessMessage>,
@@ -21,7 +22,7 @@ pub fn start_logic_thread(
     thread::Builder::new()
         .name("logic".to_string())
         .spawn(move || {
-            let mut state = BackendState::new(config.demo_mode, process_tx);
+            let mut state = BackendState::new(params.demo_mode, process_tx, config);
 
             loop {
                 match server_rx.recv_timeout(Duration::from_millis(50)) {

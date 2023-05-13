@@ -7,7 +7,6 @@ use ccdi_common::{
 };
 use ccdi_imager_interface::{BasicProperties, ImagerDevice, ExposureParams, ExposureArea};
 use log::debug;
-use nanocv::ImgSize;
 
 // ============================================ PUBLIC =============================================
 
@@ -75,8 +74,8 @@ impl ExposureController {
 
 impl ExposureController {
     fn call_process_message(&self, image: RawImage) {
-        let size = ImgSize::new(900, 600);
         let rendering = self.camera_params.rendering;
+        let size = self.camera_params.render_size;
         let message = ProcessMessage::ConvertRawImage(ConvertRawImage{image, size, rendering});
         log_err("Self process message", self.process_tx.send(message));
     }

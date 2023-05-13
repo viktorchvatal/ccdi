@@ -7,7 +7,7 @@ use super::*;
 /// parent using properties.
 pub struct StatusBar;
 
-#[derive(Clone, Eq, PartialEq, Properties)]
+#[derive(Clone, PartialEq, Properties)]
 pub struct StatusBarData {
     pub connection: ConnectionState,
     pub logic: LogicStatus,
@@ -29,6 +29,7 @@ impl Component for StatusBar {
                 { state_view("Connection", main_state) }
                 { combined("Camera", main_state, ctx.props().logic.camera) }
                 { combined("Exposure", main_state, ctx.props().logic.exposure) }
+                { combined("Storage", main_state, ctx.props().logic.storage.as_connection_state()) }
             </div>
         }
     }

@@ -2,7 +2,7 @@ mod properties;
 mod exposure;
 mod connected;
 
-use std::sync::{mpsc::Sender};
+use std::sync::{mpsc::Sender, Arc};
 
 use ccdi_common::{
     ConnectionState, ViewState, LogicStatus, ExposureCommand, ClientMessage, ProcessMessage,
@@ -10,6 +10,8 @@ use ccdi_common::{
 };
 use ccdi_imager_interface::{ImagerDriver, DeviceDescriptor};
 use log::{info};
+
+use crate::{ServiceConfig, storage::Storage};
 
 use self::{connected::ConnectedCameraController};
 
@@ -27,14 +29,18 @@ pub struct CameraController {
 }
 
 impl CameraController {
-    pub fn new(driver: Box<dyn ImagerDriver>, process_tx: Sender<ProcessMessage>) -> Self {
+    pub fn new(
+        driver: Box<dyn ImagerDriver>,
+        process_tx: Sender<ProcessMessage>,
+        config: Arc<ServiceConfig>,
+    ) -> Self {
         Self {
             driver,
             state: State::Error,
             connected: None,
             detail: String::from("Started"),
             view: None,
-            camera_params: Default::default(),
+            camera_params: CameraParams::new(config.render_size),
             process_tx,
             storage_status: StorageState::Unknown,
         }
@@ -74,7 +80,8 @@ impl CameraController {
             status: LogicStatus {
                 camera: self.connection_state(),
                 exposure: self.connected.as_ref().map(|cam| cam.exposure_status())
-                    .unwrap_or(ConnectionState::Disconnected)
+                    .unwrap_or(ConnectionState::Disconnected),
+                storage: self.storage_status.clone()
             },
             camera_properties: self.connected.as_ref().map(|cam| cam.get_properties()),
             camera_params: self.camera_params.clone(),
@@ -106,6 +113,10 @@ impl CameraController {
                 ),
             }
         }
+    }
+
+    pub fn update_storage_status(&mut self, message: StorageState) {
+        self.storage_status = message;
     }
 }
 

@@ -2,7 +2,7 @@ use std::sync::{Arc, mpsc::Sender};
 
 use ccdi_common::{ClientMessage, StateMessage, RgbImage, ProcessMessage};
 
-use crate::camera::CameraController;
+use crate::{camera::CameraController, ServiceConfig};
 
 // ============================================ PUBLIC =============================================
 
@@ -13,14 +13,19 @@ pub struct BackendState {
 }
 
 impl BackendState {
-    pub fn new(demo_mode: bool, process_tx: Sender<ProcessMessage>) -> Self {
+    pub fn new(
+        demo_mode: bool,
+        process_tx: Sender<ProcessMessage>,
+        config: Arc<ServiceConfig>,
+    ) -> Self {
         Self {
             camera: CameraController::new(
                 match demo_mode {
                     false => Box::new(ccdi_imager_moravian::MoravianImagerDriver::new()),
                     true => Box::new(ccdi_imager_demo::DemoImagerDriver::new()),
                 },
-                process_tx
+                process_tx,
+                config
             ),
             image: None,
         }
@@ -52,8 +57,8 @@ impl BackendState {
                 }
             }
             UpdateStorageState(storage_state) => {
-                ::log::info!("Storage: {:?}", storage_state);
-                vec![]
+                self.camera.update_storage_status(storage_state);
+                vec![ClientMessage::View(self.camera.get_view())]
             },
         })
     }

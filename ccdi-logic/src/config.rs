@@ -1,4 +1,5 @@
 use std::{path::{PathBuf, Path}, fs::File, io::{BufReader, Read, BufWriter, Write}, sync::Arc};
+use nanocv::ImgSize;
 use serde_derive::{Serialize, Deserialize};
 
 use ccdi_common::to_string;
@@ -9,12 +10,14 @@ use directories::ProjectDirs;
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct ServiceConfig {
     pub storage: String,
+    pub render_size: ImgSize,
 }
 
 impl Default for ServiceConfig {
     fn default() -> Self {
         Self {
-            storage: String::from("~/storage/")
+            storage: String::from("~/storage/"),
+            render_size: ImgSize::new(900, 600),
         }
     }
 }

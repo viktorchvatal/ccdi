@@ -8,7 +8,7 @@ use ccdi_common::ProcessMessage;
 use ccdi_common::StateMessage;
 use ccdi_common::StorageMessage;
 use ccdi_common::init_logger;
-use ccdi_logic::LogicConfig;
+use ccdi_logic::LogicParams;
 use ccdi_logic::create_default_config_file;
 use ccdi_logic::load_config_file;
 use ccdi_logic::start_logic_thread;
@@ -32,20 +32,22 @@ fn main() {
     let config: ServiceConfig = argh::from_env();
     init_logger(config.debug);
 
-    let logic_config = LogicConfig {
+    let params = LogicParams {
         demo_mode: config.demo,
     };
+
+    match create_default_config_file() {
+        Ok(path) => info!(
+            "Created default config in '{}'. Rename it to config.json to use it.",
+            path
+        ),
+        Err(error) => error!("Could not create default config file: {}", error),
+    }
 
     let config = match load_config_file() {
         Ok(config) => config,
         Err(error) => {
             error!("Config file could not be loaded: {}", error);
-            match create_default_config_file() {
-                Ok(path) => info!(
-                    "Created default config in '{}'. Rename it to config.json to use it.",
-                    path
-                ),
-                Err(error) => error!("Could not create default config file: {}", error),            }
             return;
         }
     };
@@ -57,7 +59,10 @@ fn main() {
 
     let _storage_thread = start_storage_thread(config.clone(), storage_rx, server_tx.clone());
     let _process_thread = start_process_thread(process_rx, clients_tx.clone(), server_tx.clone());
-    let _server_thread = start_logic_thread(logic_config, server_rx, clients_tx, process_tx);
+
+    let _server_thread = start_logic_thread(
+        params, config.clone(), server_rx, clients_tx, process_tx
+    );
 
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()

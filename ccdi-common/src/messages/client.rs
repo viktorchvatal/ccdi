@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
 use ccdi_imager_interface::{ImagerProperties, ExposureParams};
+use nanocv::ImgSize;
 use serde_derive::{Serialize, Deserialize};
 
-use crate::{RgbImage, RenderingType};
+use crate::{RgbImage, RenderingType, StorageState};
 
 // ============================================ PUBLIC =============================================
 
@@ -45,30 +46,40 @@ pub struct CameraParams {
     pub gain: u16,
     pub time: f64,
     pub rendering: RenderingType,
+    pub render_size: ImgSize,
 }
 
-impl Default for CameraParams {
-    fn default() -> Self {
+impl CameraParams {
+    pub fn new(render_size: ImgSize) -> Self {
         Self {
             loop_enabled: false,
             gain: 0,
             time: 1.0,
             rendering: RenderingType::FullImage,
+            render_size,
         }
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Serialize, Deserialize)]
+impl Default for CameraParams {
+    fn default() -> Self {
+        CameraParams::new(ImgSize::new(900, 600))
+    }
+}
+
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct LogicStatus {
     pub camera: ConnectionState,
     pub exposure: ConnectionState,
+    pub storage: StorageState,
 }
 
 impl Default for LogicStatus {
     fn default() -> Self {
         Self {
             camera: ConnectionState::Disconnected,
-            exposure: ConnectionState::Disconnected
+            exposure: ConnectionState::Disconnected,
+            storage: StorageState::Unknown,
         }
     }
 }

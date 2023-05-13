@@ -162,7 +162,10 @@ impl Component for Main {
                     on_message={client_message_received}
                     on_state_change={connection_state_changed}
                 />
-                <StatusBar connection={self.connection_state} logic={self.view_state.status}/>
+                <StatusBar
+                    connection={self.connection_state}
+                    logic={self.view_state.status.clone()}
+                />
                 <Menu clicked={menu_clicked} selected={self.selected_menu} />
                 <div class="main-row">
                     <div class="main-image-column">
