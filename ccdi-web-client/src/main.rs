@@ -1,34 +1,24 @@
-mod status_bar;
-mod footer;
-mod menu;
-mod camera;
-mod composition;
+mod components;
 mod connection;
-mod picture;
-mod gain;
-mod time;
-mod rendering;
 
 use std::sync::Arc;
 
 use ccdi_common::*;
-use ccdi_image::{rgb_image_to_jpeg};
-use composition::CompositionDetail;
 use connection::{ConnectionService};
 use gloo::console;
 
-use base64::{engine::general_purpose::STANDARD, Engine};
 use yew::html::Scope;
-use yew::{html, Component, Context, Html, classes};
+use yew::{html, Component, Context, Html};
 
-use crate::camera::CameraDetail;
-use crate::gain::GainSelector;
-use crate::menu::{Menu, MenuItem};
-use crate::picture::Picture;
-use crate::rendering::RenderingSelector;
-use crate::status_bar::StatusBar;
-use crate::footer::Footer;
-use crate::time::TimeSelector;
+use components::composition::CompositionDetail;
+use components::camera::CameraDetail;
+use components::gain::GainSelector;
+use components::menu::{Menu, MenuItem};
+use components::picture::Picture;
+use components::rendering::RenderingSelector;
+use components::status_bar::StatusBar;
+use components::footer::Footer;
+use components::time::TimeSelector;
 
 // ============================================ PUBLIC =============================================
 

@@ -1,5 +1,8 @@
+use std::sync::Arc;
+
+use base64::{engine::general_purpose::STANDARD, Engine};
 use ccdi_common::RgbImage;
-use ccdi_image::{Transform, TransformFunction};
+use ccdi_image::{Transform, TransformFunction, rgb_image_to_jpeg};
 use yew::Properties;
 use super::*;
 
