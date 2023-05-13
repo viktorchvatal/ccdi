@@ -1,4 +1,4 @@
-use ccdi_common::{log_err, to_string, StateMessage, ClientMessage};
+use ccdi_common::{log_err, to_string, StateMessage, ClientMessage, rgb_image_to_bytes};
 use log::*;
 use std::collections::HashMap;
 use std::convert::Infallible;
@@ -31,7 +31,7 @@ pub fn start_single_async_to_multiple_clients_sender(
 
         loop {
             if let Some(message) = async_clients_rx.recv().await {
-                if let Ok(json_string) = serde_json::to_string(&message) {
+                if let Ok(payload) = serialize(&message) {
                     for (index, transmitter) in clients.read().await.transmitters.iter() {
 
                         if transmitter.capacity() < MIN_CAPACITY {
@@ -44,9 +44,7 @@ pub fn start_single_async_to_multiple_clients_sender(
                                 index, transmitter.capacity()
                             );
                         } else {
-                            let payload = Ok(Message::text(json_string.clone()));
-
-                            if let Err(_error) = transmitter.try_send(payload) {
+                            if let Err(_error) = transmitter.try_send(Ok(payload.clone())) {
                                 warn!("Error sending message to client {}", index);
                             }
                         }
@@ -71,6 +69,13 @@ pub fn create_websocket_service(
 }
 
 // =========================================== PRIVATE =============================================
+
+fn serialize(message: &ClientMessage) -> Result<Message, String> {
+    match message {
+        ClientMessage::RgbImage(image) => Ok(Message::binary(rgb_image_to_bytes(image))),
+        _other => Ok(Message::text(serde_json::to_string(&message).map_err(to_string)?))
+    }
+}
 
 const CAPACITY: usize = 20;
 const MIN_CAPACITY: usize = 5;

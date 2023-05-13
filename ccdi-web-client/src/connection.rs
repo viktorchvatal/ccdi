@@ -1,7 +1,9 @@
+use std::sync::Arc;
+
 use anyhow::Error;
 use yew::{html, Component, Context, Html, Callback, Properties};
-use yew_websocket::{websocket::{WebSocketService, WebSocketStatus, WebSocketTask}, macros::Json};
-use ccdi_common::{ClientMessage, StateMessage, ConnectionState};
+use yew_websocket::{websocket::{WebSocketService, WebSocketStatus, WebSocketTask}};
+use ccdi_common::{ClientMessage, StateMessage, ConnectionState, rgb_image_from_bytes, to_string};
 use gloo::console;
 use gloo::timers::callback::Interval;
 
@@ -16,7 +18,7 @@ pub enum Msg {
     Tick,
     Connect,
     SendData(StateMessage),
-    DataReceived(Result<ClientMessage, Error>),
+    DataReceived(WebsocketMessage),
     Established,
     Disconnect,
     Lost,
@@ -63,7 +65,7 @@ impl Component for ConnectionService {
                 let ws_url = format!("ws://{}:8081/ccdi", hostname);
 
                 console::info!(&hostname, "WS: ", &ws_url);
-                let callback = ctx.link().callback(|Json(data)| Msg::DataReceived(data));
+                let callback = ctx.link().callback(|data: WebsocketMessage| Msg::DataReceived(data));
 
                 let notification = ctx.link().batch_callback(|status| match status {
                     WebSocketStatus::Opened => Some(Msg::Established),
@@ -93,7 +95,7 @@ impl Component for ConnectionService {
                 false
             }
             Msg::DataReceived(reception_result) => {
-                if let Ok(client_message) = reception_result {
+                if let Ok(client_message) = deserialize(reception_result) {
                     if client_message == ClientMessage::Reconnect {
                         // Our server queue got overwhelmed (client got too slow or just did
                         // not receive messages, but websocket was still alive).
@@ -126,5 +128,40 @@ impl Component for ConnectionService {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {}
+    }
+}
+
+fn deserialize(message: WebsocketMessage) -> Result<ClientMessage, String> {
+    match message {
+        WebsocketMessage::Text(json_string)
+            => serde_json::from_str::<ClientMessage>(&json_string).map_err(to_string),
+        WebsocketMessage::Binary(bytes) => Ok(ClientMessage::RgbImage(
+            Arc::new(rgb_image_from_bytes(bytes)?))
+        ),
+        WebsocketMessage::ReceptionError(error) => Err(error),
+    }
+}
+
+pub enum WebsocketMessage {
+    Text(String),
+    Binary(Vec<u8>),
+    ReceptionError(String),
+}
+
+impl From<Result<String, Error>> for WebsocketMessage {
+    fn from(value: Result<String, Error>) -> Self {
+        match value {
+            Ok(text) => WebsocketMessage::Text(text),
+            Err(error) => WebsocketMessage::ReceptionError(format!("{error:?}"))
+        }
+    }
+}
+
+impl From<Result<Vec<u8>, Error>> for WebsocketMessage {
+    fn from(value: Result<Vec<u8>, Error>) -> Self {
+        match value {
+            Ok(binary) => WebsocketMessage::Binary(binary),
+            Err(error) => WebsocketMessage::ReceptionError(format!("{error:?}"))
+        }
     }
 }
