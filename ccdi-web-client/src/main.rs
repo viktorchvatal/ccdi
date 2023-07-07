@@ -1,11 +1,11 @@
 mod components;
 mod connection;
+mod selectors;
 
 use std::sync::Arc;
 
 use ccdi_common::*;
-use components::cooling::CoolingSelector;
-use connection::{ConnectionService};
+use connection::ConnectionService;
 use gloo::console;
 
 use yew::html::Scope;
@@ -13,13 +13,14 @@ use yew::{html, Component, Context, Html};
 
 use components::composition::CompositionDetail;
 use components::camera::CameraDetail;
-use components::gain::GainSelector;
-use components::menu::{Menu, MenuItem};
-use components::picture::Picture;
-use components::rendering::RenderingSelector;
-use components::status_bar::StatusBar;
 use components::footer::Footer;
-use components::time::TimeSelector;
+use components::menu::{Menu, MenuItem};
+use components::status_bar::StatusBar;
+use selectors::picture::Picture;
+use selectors::time::TimeSelector;
+use selectors::gain::GainSelector;
+use selectors::cooling::CoolingSelector;
+use selectors::rendering::RenderingSelector;
 
 // ============================================ PUBLIC =============================================
 
