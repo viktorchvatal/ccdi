@@ -1,13 +1,9 @@
-mod gui;
-
 use std::{path::{PathBuf, Path}, fs::File, io::{BufReader, Read, BufWriter, Write}, sync::Arc};
 use nanocv::ImgSize;
 use serde_derive::{Serialize, Deserialize};
 
-use ccdi_common::to_string;
+use ccdi_common::{to_string, GuiConfig};
 use directories::ProjectDirs;
-
-use self::gui::GuiConfig;
 
 // ============================================ PUBLIC =============================================
 

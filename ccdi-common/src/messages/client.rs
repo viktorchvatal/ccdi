@@ -6,6 +6,8 @@ use serde_derive::{Serialize, Deserialize};
 
 use crate::{RgbImage, RenderingType, StorageState};
 
+use super::gui_config::GuiConfig;
+
 // ============================================ PUBLIC =============================================
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
@@ -27,6 +29,7 @@ pub struct ViewState {
     pub status: LogicStatus,
     pub camera_properties: Option<Arc<ImagerProperties>>,
     pub camera_params: CameraParams,
+    pub config: GuiConfig,
 }
 
 impl Default for ViewState {
@@ -36,6 +39,7 @@ impl Default for ViewState {
             status: Default::default(),
             camera_properties: None,
             camera_params: Default::default(),
+            config: GuiConfig::default(),
         }
     }
 }
@@ -47,6 +51,7 @@ pub struct CameraParams {
     pub time: f64,
     pub rendering: RenderingType,
     pub render_size: ImgSize,
+    pub temperature: f64,
 }
 
 impl CameraParams {
@@ -57,6 +62,7 @@ impl CameraParams {
             time: 1.0,
             rendering: RenderingType::FullImage,
             render_size,
+            temperature: 20.0,
         }
     }
 }

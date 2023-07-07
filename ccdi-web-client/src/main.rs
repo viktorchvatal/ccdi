@@ -4,6 +4,7 @@ mod connection;
 use std::sync::Arc;
 
 use ccdi_common::*;
+use components::cooling::CoolingSelector;
 use connection::{ConnectionService};
 use gloo::console;
 
@@ -65,9 +66,24 @@ impl Main {
                     camera_params={self.view_state.camera_params.clone()}
                 />
             },
+            MenuItem::Cooling => self.render_cooling(ctx),
             MenuItem::Camera => html!{
                 <CameraDetail data={self.view_state.camera_properties.clone()} />
             },
+        }
+    }
+
+    fn render_cooling(&self, ctx: &Context<Self>) -> Html {
+        let temperature_changed = ctx.link().callback(
+            |temp: f64| Msg::ParamUpdate(CameraParamMessage::SetTemp(temp))
+        );
+
+        html!{
+            <CoolingSelector
+                config={self.view_state.config.temperature.clone()}
+                selected_temp={self.view_state.camera_params.temperature}
+                temp_changed={temperature_changed}
+            />
         }
     }
 }

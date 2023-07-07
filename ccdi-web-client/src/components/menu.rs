@@ -11,6 +11,7 @@ pub struct Menu;
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum MenuItem {
     Composition,
+    Cooling,
     Camera
 }
 
@@ -46,6 +47,7 @@ impl Component for Menu {
         html! {
             <div>
                 {menu_item("Composition", Composition, selected, ctx)}
+                {menu_item("Cooling", Cooling, selected, ctx)}
                 {menu_item("Camera", Camera, selected, ctx)}
             </div>
         }

@@ -1,7 +1,7 @@
 use std::sync::{Arc, mpsc::Sender};
 
 use ccdi_common::{ExposureCommand, ClientMessage, ConnectionState, ProcessMessage, CameraParams};
-use ccdi_imager_interface::{ImagerDevice, ImagerProperties};
+use ccdi_imager_interface::{ImagerDevice, ImagerProperties, TemperatureRequest};
 
 use super::{properties::{PropertiesController}, exposure::ExposureController};
 
@@ -42,6 +42,10 @@ impl ConnectedCameraController {
 
     pub fn update_camera_params(&mut self, params: CameraParams) {
         self.exposure.update_camera_params(params);
+    }
+
+    pub fn temperature_command(&mut self, command: TemperatureRequest) -> Result<(), String> {
+        self.device.as_mut().set_temperature(command)
     }
 
     pub fn exposure_command(&mut self, command: ExposureCommand) -> Result<(), String> {

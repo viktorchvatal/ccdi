@@ -26,6 +26,7 @@ pub struct CameraController {
     camera_params: CameraParams,
     process_tx: Sender<ProcessMessage>,
     storage_status: StorageState,
+    config: Arc<ServiceConfig>,
 }
 
 impl CameraController {
@@ -43,6 +44,7 @@ impl CameraController {
             camera_params: CameraParams::new(config.render_size),
             process_tx,
             storage_status: StorageState::Unknown,
+            config
         }
     }
 
@@ -85,6 +87,7 @@ impl CameraController {
             },
             camera_properties: self.connected.as_ref().map(|cam| cam.get_properties()),
             camera_params: self.camera_params.clone(),
+            config: self.config.gui.clone()
         }
     }
 
@@ -94,6 +97,7 @@ impl CameraController {
         match message {
             EnableLoop(value) => self.camera_params.loop_enabled = value,
             SetGain(gain) => self.camera_params.gain = gain,
+            SetTemp(temp) => self.camera_params.temperature = temp,
             SetTime(time) => self.camera_params.time = time,
             SetRenderingType(rendering) => self.camera_params.rendering = rendering,
         }
