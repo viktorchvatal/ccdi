@@ -40,6 +40,7 @@ pub struct ImagerProperties {
 pub struct BasicProperties {
     pub width: usize,
     pub height: usize,
+    pub temperature: f32,
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]

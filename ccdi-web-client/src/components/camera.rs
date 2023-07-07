@@ -46,7 +46,10 @@ fn render_properties(properties: &ImagerProperties) -> Html {
 
 fn render_basic_rows(properties: &BasicProperties) -> Html {
     html!{
-        {render_row("Resolution", &format!("{} x {}", properties.width, properties.height))}
+        <div>
+            {render_row("Resolution", &format!("{} x {}", properties.width, properties.height))}
+            {render_row("Temperature", &format!("{}", properties.temperature))}
+        </div>
     }
 }
 

@@ -12,6 +12,7 @@ pub struct ConnectedCameraController {
     properties: PropertiesController,
     exposure: ExposureController,
     messages: Vec<ClientMessage>,
+    last_temperature_set: Option<f32>,
 }
 
 impl ConnectedCameraController {
@@ -21,19 +22,28 @@ impl ConnectedCameraController {
     ) -> Result<Self, String> {
         let properties = PropertiesController::new(device.as_mut())?;
         let exposure = ExposureController::new(properties.get_properties().basic, process_tx);
-        Ok(Self {properties, exposure, device, messages: vec![]})
+        let last_temperature_set = None;
+        Ok(Self {properties, exposure, device, messages: vec![], last_temperature_set})
     }
 
     pub fn close(mut self) {
         self.device.close()
     }
 
-    pub fn periodic(&mut self) -> Result<(), String> {
+    pub fn periodic(&mut self, temperature: f32) -> Result<(), String> {
         self.messages.append(&mut self.exposure.periodic(self.device.as_mut())?);
+
+        if self.last_temperature_set != Some(temperature) {
+            self.device.set_temperature(
+                TemperatureRequest { temperature, speed: 3.0 }
+            )?;
+            self.last_temperature_set = Some(temperature);
+        }
 
         self.properties
             .read_properties(self.device.as_mut())
             .map_err(|_| format!("Periodic read properties failed"))
+
     }
 
     pub fn get_properties(&self) -> Arc<ImagerProperties> {
@@ -42,10 +52,6 @@ impl ConnectedCameraController {
 
     pub fn update_camera_params(&mut self, params: CameraParams) {
         self.exposure.update_camera_params(params);
-    }
-
-    pub fn temperature_command(&mut self, command: TemperatureRequest) -> Result<(), String> {
-        self.device.as_mut().set_temperature(command)
     }
 
     pub fn exposure_command(&mut self, command: ExposureCommand) -> Result<(), String> {

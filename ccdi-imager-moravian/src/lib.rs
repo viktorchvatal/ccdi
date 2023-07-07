@@ -80,6 +80,7 @@ fn read_basic_properties(device: &CameraDriver) -> Result<BasicProperties, Camer
     Ok(BasicProperties{
         width: device.read_chip_width()? as usize,
         height: device.read_chip_height()? as usize,
+        temperature: device.read_camera_temperature()?,
     })
 }
 
@@ -87,7 +88,6 @@ fn read_all_properties(device: &CameraDriver) -> Result<Vec<DeviceProperty>, Cam
     Ok(vec![
         prop_f32("Chip Temperature", device.read_chip_temperature()?, 2),
         prop_f32("Hot Temperature", device.read_hot_temperature()?, 2),
-        prop_f32("Camera Temperature", device.read_camera_temperature()?, 2),
         prop_f32("Env Temperature", device.read_environment_temperature()?, 2),
         prop_f32("Supply Voltage", device.read_supply_voltage()?, 2),
         prop("Power Utilization", device.read_power_utilization()?),

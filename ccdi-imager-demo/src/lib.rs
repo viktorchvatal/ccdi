@@ -24,12 +24,13 @@ impl ImagerDriver for DemoImagerDriver {
     }
 
     fn connect_device(&mut self, _descriptor: &DeviceDescriptor) -> Result<Box<dyn ImagerDevice>, String> {
-        Ok(Box::new(DemoImagerDevice { offset: 0.0 }))
+        Ok(Box::new(DemoImagerDevice { offset: 0.0, temperature: 30.0 }))
     }
 }
 
 pub struct DemoImagerDevice {
     offset: f32,
+    temperature: f32,
 }
 
 impl ImagerDevice for DemoImagerDevice {
@@ -39,6 +40,7 @@ impl ImagerDevice for DemoImagerDevice {
             basic: BasicProperties {
                 width: 3000,
                 height: 2000,
+                temperature: self.temperature
             },
             other: list_demo_properties(&self)
         })
@@ -66,6 +68,7 @@ impl ImagerDevice for DemoImagerDevice {
 
     fn set_temperature(&mut self, request: TemperatureRequest) -> Result<(), String> {
         dbg!("Setting temperature: ", request.temperature, request.speed);
+        self.temperature = request.temperature;
         Ok(())
     }
 }

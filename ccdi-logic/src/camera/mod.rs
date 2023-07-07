@@ -189,7 +189,7 @@ impl CameraController {
 
     fn handle_connected_state(&mut self) -> State {
         if let Some(ref mut controller) = self.connected {
-            match controller.periodic() {
+            match controller.periodic(self.camera_params.temperature) {
                 Ok(_) => {
                     State::Connected
                 },

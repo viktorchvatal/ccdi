@@ -6,14 +6,14 @@ use super::*;
 pub struct CoolingSelector;
 
 pub enum Msg {
-    SetTemp(f64),
+    SetTemp(f32),
 }
 
 #[derive(Clone, PartialEq, Properties)]
 pub struct TimeData {
-    pub temp_changed: Callback<f64>,
-    pub selected_temp: f64,
-    pub config: ButtonSet<f64>,
+    pub temp_changed: Callback<f32>,
+    pub selected_temp: f32,
+    pub config: ButtonSet<f32>,
 }
 
 impl Component for CoolingSelector {
@@ -49,8 +49,8 @@ impl Component for CoolingSelector {
 // =========================================== PRIVATE =============================================
 
 fn render_buttons(
-    button_set: &ButtonSet<f64>,
-    current: f64,
+    button_set: &ButtonSet<f32>,
+    current: f32,
     ctx: &Context<CoolingSelector>
 ) -> Html {
     button_set.buttons.iter()
@@ -59,8 +59,8 @@ fn render_buttons(
 }
 
 fn render_row(
-    row: &[Button<f64>],
-    current: f64,
+    row: &[Button<f32>],
+    current: f32,
     ctx: &Context<CoolingSelector>
 ) -> Html {
     let row_items = row.iter()
@@ -73,12 +73,12 @@ fn render_row(
 }
 
 fn cooling_button(
-    current: f64,
-    value: f64,
+    current: f32,
+    value: f32,
     text: &str,
     ctx: &Context<CoolingSelector>
 ) -> Html {
-    let time_click = |action: f64| ctx.link().callback(move |_| Msg::SetTemp(action));
+    let time_click = |action: f32| ctx.link().callback(move |_| Msg::SetTemp(action));
 
     let selected_class = match value == current {
         true => Some("button-selected"),

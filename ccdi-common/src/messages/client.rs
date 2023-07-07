@@ -51,7 +51,7 @@ pub struct CameraParams {
     pub time: f64,
     pub rendering: RenderingType,
     pub render_size: ImgSize,
-    pub temperature: f64,
+    pub temperature: f32,
 }
 
 impl CameraParams {

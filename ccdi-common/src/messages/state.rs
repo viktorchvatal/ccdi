@@ -25,7 +25,7 @@ pub enum CameraParamMessage {
     EnableLoop(bool),
     SetGain(u16),
     SetTime(f64),
-    SetTemp(f64),
+    SetTemp(f32),
     SetRenderingType(RenderingType),
 }
 

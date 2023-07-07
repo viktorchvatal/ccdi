@@ -76,7 +76,7 @@ impl Main {
 
     fn render_cooling(&self, ctx: &Context<Self>) -> Html {
         let temperature_changed = ctx.link().callback(
-            |temp: f64| Msg::ParamUpdate(CameraParamMessage::SetTemp(temp))
+            |temp: f32| Msg::ParamUpdate(CameraParamMessage::SetTemp(temp))
         );
 
         html!{
