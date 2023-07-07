@@ -1,3 +1,5 @@
+mod gui;
+
 use std::{path::{PathBuf, Path}, fs::File, io::{BufReader, Read, BufWriter, Write}, sync::Arc};
 use nanocv::ImgSize;
 use serde_derive::{Serialize, Deserialize};
@@ -5,12 +7,15 @@ use serde_derive::{Serialize, Deserialize};
 use ccdi_common::to_string;
 use directories::ProjectDirs;
 
+use self::gui::GuiConfig;
+
 // ============================================ PUBLIC =============================================
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct ServiceConfig {
     pub storage: String,
     pub render_size: ImgSize,
+    pub gui: GuiConfig,
 }
 
 impl Default for ServiceConfig {
@@ -18,6 +23,7 @@ impl Default for ServiceConfig {
         Self {
             storage: String::from("~/storage/"),
             render_size: ImgSize::new(900, 600),
+            gui: Default::default(),
         }
     }
 }
@@ -25,13 +31,13 @@ impl Default for ServiceConfig {
 pub fn load_config_file() -> Result<Arc<ServiceConfig>, String> {
     let path = config_file_path()?;
 
-    serde_json::from_str::<ServiceConfig>(&load_text_file(path.as_path())?)
+    serde_yaml::from_str::<ServiceConfig>(&load_text_file(path.as_path())?)
         .map_err(|err| format!("Could not load config file {}: {}", path_as_string(&path), err))
         .map(|config| Arc::new(config))
 }
 
 pub fn create_default_config_file() -> Result<String, String> {
-    let config_json = serde_json::to_string_pretty(&<ServiceConfig as Default>::default())
+    let config_json = serde_yaml::to_string(&<ServiceConfig as Default>::default())
         .map_err(to_string)?;
 
     let path = default_file_path()?;
@@ -68,11 +74,11 @@ fn path_as_string(path: &PathBuf) -> String {
 }
 
 fn config_file_path() -> Result<PathBuf, String> {
-    create_file_path("config.json")
+    create_file_path("config.yaml")
 }
 
 fn default_file_path() -> Result<PathBuf, String> {
-    create_file_path("default.json")
+    create_file_path("default.yaml")
 }
 
 fn create_file_path(file_name: &str) -> Result<PathBuf, String> {
