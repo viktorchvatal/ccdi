@@ -57,20 +57,52 @@ impl Main {
     }
 
     fn render_tool(&self, ctx: &Context<Self>) -> Html {
-        let action = ctx.link()
-            .callback(|action: StateMessage| Msg::SendMessage(action));
-
         match self.selected_menu {
-            MenuItem::Composition => html!{
-                <CompositionDetail
-                    on_action={action}
-                    camera_params={self.view_state.camera_params.clone()}
-                />
-            },
+            MenuItem::Composition => self.render_composition(ctx),
             MenuItem::Cooling => self.render_cooling(ctx),
             MenuItem::Info => html!{
                 <CameraDetail data={self.view_state.camera_properties.clone()} />
             },
+        }
+    }
+
+    fn render_composition(&self, ctx: &Context<Self>) -> Html {
+        let action = ctx.link()
+            .callback(|action: StateMessage| Msg::SendMessage(action));
+
+        let gain_changed = ctx.link().callback(
+            |gain: u16| Msg::ParamUpdate(CameraParamMessage::SetGain(gain))
+        );
+
+        let time_changed = ctx.link().callback(
+            |time: f64| Msg::ParamUpdate(CameraParamMessage::SetTime(time))
+        );
+
+        let rendering_changed = ctx.link().callback(
+            |value: RenderingType| Msg::ParamUpdate(CameraParamMessage::SetRenderingType(value))
+        );
+
+        html!{
+            <div>
+                <GainSelector
+                    config={self.view_state.config.gain.clone()}
+                    gain_changed={gain_changed}
+                    selected_gain={self.view_state.camera_params.gain}
+                />
+                <TimeSelector
+                    config={self.view_state.config.exposure.clone()}
+                    time_changed={time_changed}
+                    selected_time={self.view_state.camera_params.time}
+                />
+                <RenderingSelector
+                    rendering_changed={rendering_changed}
+                    selected_value={self.view_state.camera_params.rendering}
+                />
+                <CompositionDetail
+                    on_action={action}
+                    camera_params={self.view_state.camera_params.clone()}
+                />
+            </div>
         }
     }
 
@@ -179,20 +211,6 @@ impl Component for Main {
                         <Picture image={self.image.clone()} />
                     </div>
                     <div class="main-tool-column">
-                        <GainSelector
-                        config={self.view_state.config.gain.clone()}
-                            gain_changed={gain_changed}
-                            selected_gain={self.view_state.camera_params.gain}
-                        />
-                        <TimeSelector
-                            config={self.view_state.config.exposure.clone()}
-                            time_changed={time_changed}
-                            selected_time={self.view_state.camera_params.time}
-                        />
-                        <RenderingSelector
-                            rendering_changed={rendering_changed}
-                            selected_value={self.view_state.camera_params.rendering}
-                        />
                         { self.render_tool(ctx) }
                     </div>
                 </div>
