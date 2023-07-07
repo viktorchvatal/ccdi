@@ -13,6 +13,7 @@ pub enum Msg {
 pub struct GainData {
     pub gain_changed: Callback<u16>,
     pub selected_gain: u16,
+    pub config: ButtonSet<u16>,
 }
 
 impl Component for GainSelector {
@@ -34,15 +35,12 @@ impl Component for GainSelector {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let selected = ctx.props().selected_gain;
+        let buttons = &ctx.props().config;
 
         html! {
             <div>
                 <p>{"Set camera gain"}</p>
-                { gain_button(selected, 0, ctx)}
-                { gain_button(selected, 1000, ctx)}
-                { gain_button(selected, 2000, ctx)}
-                { gain_button(selected, 3000, ctx)}
-                { gain_button(selected, 4000, ctx)}
+                {render_buttons(buttons, selected, ctx)}
             </div>
         }
     }
@@ -50,9 +48,34 @@ impl Component for GainSelector {
 
 // =========================================== PRIVATE =============================================
 
+fn render_buttons(
+    button_set: &ButtonSet<u16>,
+    current: u16,
+    ctx: &Context<GainSelector>
+) -> Html {
+    button_set.buttons.iter()
+        .map(|row| render_row(row.as_slice(), current, ctx))
+        .collect::<Html>()
+}
+
+fn render_row(
+    row: &[Button<u16>],
+    current: u16,
+    ctx: &Context<GainSelector>
+) -> Html {
+    let row_items = row.iter()
+        .map(|button| gain_button(current, button.value, button.text.as_str(), ctx))
+        .collect::<Html>();
+
+    html!{
+        <div>{row_items}</div>
+    }
+}
+
 fn gain_button(
     current: u16,
     value: u16,
+    text: &str,
     ctx: &Context<GainSelector>
 ) -> Html {
     let gain_click = |action: u16| ctx.link().callback(move |_| Msg::SetGain(action));
@@ -66,7 +89,7 @@ fn gain_button(
         <button
             class={classes!("short-button", selected_class)}
             onclick={gain_click(value)}
-            >{format!("{}", value)}
+            >{text}
         </button>
     }
 }

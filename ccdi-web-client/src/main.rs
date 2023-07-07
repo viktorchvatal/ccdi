@@ -67,7 +67,7 @@ impl Main {
                 />
             },
             MenuItem::Cooling => self.render_cooling(ctx),
-            MenuItem::Camera => html!{
+            MenuItem::Info => html!{
                 <CameraDetail data={self.view_state.camera_properties.clone()} />
             },
         }
@@ -179,6 +179,7 @@ impl Component for Main {
                     </div>
                     <div class="main-tool-column">
                         <GainSelector
+                        config={self.view_state.config.gain.clone()}
                             gain_changed={gain_changed}
                             selected_gain={self.view_state.camera_params.gain}
                         />
