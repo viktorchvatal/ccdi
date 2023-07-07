@@ -183,6 +183,7 @@ impl Component for Main {
                             selected_gain={self.view_state.camera_params.gain}
                         />
                         <TimeSelector
+                            config={self.view_state.config.exposure.clone()}
                             time_changed={time_changed}
                             selected_time={self.view_state.camera_params.time}
                         />

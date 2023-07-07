@@ -13,6 +13,7 @@ pub enum Msg {
 pub struct TimeData {
     pub time_changed: Callback<f64>,
     pub selected_time: f64,
+    pub config: ButtonSet<f64>,
 }
 
 impl Component for TimeSelector {
@@ -34,42 +35,12 @@ impl Component for TimeSelector {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let selected = ctx.props().selected_time;
+        let buttons = &ctx.props().config;
 
         html! {
             <div>
                 <p>{"Set camera exposure time"}</p>
-                <div>
-                    { time_button(selected, 0.1, ctx)}
-                    { time_button(selected, 0.15, ctx)}
-                    { time_button(selected, 0.2, ctx)}
-                    { time_button(selected, 0.3, ctx)}
-                    { time_button(selected, 0.5, ctx)}
-                    { time_button(selected, 0.7, ctx)}
-                </div>
-                <div>
-                    { time_button(selected, 1.0, ctx)}
-                    { time_button(selected, 1.5, ctx)}
-                    { time_button(selected, 2.0, ctx)}
-                    { time_button(selected, 3.0, ctx)}
-                    { time_button(selected, 5.0, ctx)}
-                    { time_button(selected, 7.0, ctx)}
-                </div>
-                <div>
-                    { time_button(selected, 10.0, ctx)}
-                    { time_button(selected, 15.0, ctx)}
-                    { time_button(selected, 20.0, ctx)}
-                    { time_button(selected, 30.0, ctx)}
-                    { time_button(selected, 40.0, ctx)}
-                    { time_button(selected, 60.0, ctx)}
-                </div>
-                <div>
-                    { time_button(selected, 90.0, ctx)}
-                    { time_button(selected, 2.0*60.0, ctx)}
-                    { time_button(selected, 3.0*60.0, ctx)}
-                    { time_button(selected, 5.0*60.0, ctx)}
-                    { time_button(selected, 7.0*60.0, ctx)}
-                    { time_button(selected, 10.0*60.0, ctx)}
-                </div>
+                {render_buttons(buttons, selected, ctx)}
             </div>
         }
     }
@@ -77,9 +48,34 @@ impl Component for TimeSelector {
 
 // =========================================== PRIVATE =============================================
 
+fn render_buttons(
+    button_set: &ButtonSet<f64>,
+    current: f64,
+    ctx: &Context<TimeSelector>
+) -> Html {
+    button_set.buttons.iter()
+        .map(|row| render_row(row.as_slice(), current, ctx))
+        .collect::<Html>()
+}
+
+fn render_row(
+    row: &[Button<f64>],
+    current: f64,
+    ctx: &Context<TimeSelector>
+) -> Html {
+    let row_items = row.iter()
+        .map(|button| time_button(current, button.value, button.text.as_str(), ctx))
+        .collect::<Html>();
+
+    html!{
+        <div>{row_items}</div>
+    }
+}
+
 fn time_button(
     current: f64,
     value: f64,
+    text: &str,
     ctx: &Context<TimeSelector>
 ) -> Html {
     let time_click = |action: f64| ctx.link().callback(move |_| Msg::SetTime(action));
@@ -93,25 +89,7 @@ fn time_button(
         <button
             class={classes!("short-button", selected_class)}
             onclick={time_click(value)}
-            >{format_time_value(value)}
+            >{text}
         </button>
-    }
-}
-
-fn format_time_value(value: f64) -> String {
-    if value >= 60.0 {
-        let minutes = value/60.0;
-        format!("{}m", minutes)
-    } else {
-        if value < 1.0 {
-            let fraction = 1.0/value;
-            if fraction >= 10.0 {
-                format!("1/{:2.0}s", fraction)
-            } else {
-                format!("1/{:3.1}s", fraction)
-            }
-        } else {
-            format!("{}s", value)
-        }
     }
 }
