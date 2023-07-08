@@ -12,7 +12,8 @@ pub struct Menu;
 pub enum MenuItem {
     Composition,
     Cooling,
-    Info
+    Info,
+    Shoot,
 }
 
 pub enum Msg {
@@ -49,6 +50,7 @@ impl Component for Menu {
                 {menu_item("Composition", Composition, selected, ctx)}
                 {menu_item("Cooling", Cooling, selected, ctx)}
                 {menu_item("Info", Info, selected, ctx)}
+                {menu_item("Shoot", Shoot, selected, ctx)}
             </div>
         }
     }

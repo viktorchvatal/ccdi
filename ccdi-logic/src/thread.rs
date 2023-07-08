@@ -18,11 +18,12 @@ pub fn start_logic_thread(
     server_rx: Receiver<StateMessage>,
     clients_tx: Sender<ClientMessage>,
     process_tx: Sender<ProcessMessage>,
+    storage_tx: Sender<StorageMessage>,
 ) -> Result<JoinHandle<()>, String> {
     thread::Builder::new()
         .name("logic".to_string())
         .spawn(move || {
-            let mut state = BackendState::new(params.demo_mode, process_tx, config);
+            let mut state = BackendState::new(params.demo_mode, process_tx, storage_tx, config);
 
             loop {
                 match server_rx.recv_timeout(Duration::from_millis(50)) {

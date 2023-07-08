@@ -1,9 +1,9 @@
 
-use std::{mem::swap, sync::{mpsc::Sender}};
+use std::{mem::swap, sync::{mpsc::Sender, Arc}};
 
 use ccdi_common::{
     ExposureCommand, ClientMessage, RawImage, ProcessMessage, ConvertRawImage, log_err,
-    CameraParams
+    CameraParams, StorageMessage
 };
 use ccdi_imager_interface::{BasicProperties, ImagerDevice, ExposureParams, ExposureArea};
 use log::debug;
@@ -15,15 +15,21 @@ pub struct ExposureController {
     camera_params: CameraParams,
     current_exposure: Option<ExposureParams>,
     process_tx: Sender<ProcessMessage>,
+    storage_tx: Sender<StorageMessage>,
 }
 
 impl ExposureController {
-    pub fn new(properties: BasicProperties, process_tx: Sender<ProcessMessage>) -> Self {
+    pub fn new(
+        properties: BasicProperties,
+        process_tx: Sender<ProcessMessage>,
+        storage_tx: Sender<StorageMessage>,
+    ) -> Self {
         Self {
             properties,
             camera_params: Default::default(),
             current_exposure: None,
-            process_tx
+            process_tx,
+            storage_tx,
         }
     }
 
@@ -40,7 +46,7 @@ impl ExposureController {
                 let data = device.download_image(&params)?;
                 let raw_image = RawImage { params, data };
                 debug!("Image downloaded");
-                self.call_process_message(raw_image);
+                self.call_process_message(Arc::new(raw_image));
             }
         }
 
@@ -73,9 +79,11 @@ impl ExposureController {
 // =========================================== PRIVATE =============================================
 
 impl ExposureController {
-    fn call_process_message(&self, image: RawImage) {
+    fn call_process_message(&self, image: Arc<RawImage>) {
         let rendering = self.camera_params.rendering;
         let size = self.camera_params.render_size;
+        let message = StorageMessage::ProcessImage(image.clone());
+        log_err("Self process message", self.storage_tx.send(message));
         let message = ProcessMessage::ConvertRawImage(ConvertRawImage{image, size, rendering});
         log_err("Self process message", self.process_tx.send(message));
     }

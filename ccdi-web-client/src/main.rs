@@ -60,6 +60,7 @@ impl Main {
         match self.selected_menu {
             MenuItem::Composition => self.render_composition(ctx),
             MenuItem::Cooling => self.render_cooling(ctx),
+            MenuItem::Shoot => self.render_shoot(ctx),
             MenuItem::Info => html!{
                 <CameraDetail data={self.view_state.camera_properties.clone()} />
             },
@@ -116,6 +117,18 @@ impl Main {
                 config={self.view_state.config.temperature.clone()}
                 selected_temp={self.view_state.camera_params.temperature}
                 temp_changed={temperature_changed}
+            />
+        }
+    }
+
+    fn render_shoot(&self, ctx: &Context<Self>) -> Html {
+        let action = ctx.link()
+            .callback(|action: StateMessage| Msg::SendMessage(action));
+
+        html!{
+            <CompositionDetail
+                on_action={action}
+                camera_params={self.view_state.camera_params.clone()}
             />
         }
     }
@@ -181,18 +194,6 @@ impl Component for Main {
 
         let connection_state_changed = ctx.link().callback(
             |state: ConnectionState| Msg::ConnectionState(state)
-        );
-
-        let gain_changed = ctx.link().callback(
-            |gain: u16| Msg::ParamUpdate(CameraParamMessage::SetGain(gain))
-        );
-
-        let time_changed = ctx.link().callback(
-            |time: f64| Msg::ParamUpdate(CameraParamMessage::SetTime(time))
-        );
-
-        let rendering_changed = ctx.link().callback(
-            |value: RenderingType| Msg::ParamUpdate(CameraParamMessage::SetRenderingType(value))
         );
 
         html! {

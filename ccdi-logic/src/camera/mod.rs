@@ -6,12 +6,12 @@ use std::sync::{mpsc::Sender, Arc};
 
 use ccdi_common::{
     ConnectionState, ViewState, LogicStatus, ExposureCommand, ClientMessage, ProcessMessage,
-    CameraParams, CameraParamMessage, StorageState
+    CameraParams, CameraParamMessage, StorageState, StorageMessage
 };
 use ccdi_imager_interface::{ImagerDriver, DeviceDescriptor};
 use log::{info};
 
-use crate::{ServiceConfig, storage::Storage};
+use crate::{ServiceConfig};
 
 use self::{connected::ConnectedCameraController};
 
@@ -25,6 +25,7 @@ pub struct CameraController {
     view: Option<ViewState>,
     camera_params: CameraParams,
     process_tx: Sender<ProcessMessage>,
+    storage_tx: Sender<StorageMessage>,
     storage_status: StorageState,
     config: Arc<ServiceConfig>,
 }
@@ -33,6 +34,7 @@ impl CameraController {
     pub fn new(
         driver: Box<dyn ImagerDriver>,
         process_tx: Sender<ProcessMessage>,
+        storage_tx: Sender<StorageMessage>,
         config: Arc<ServiceConfig>,
     ) -> Self {
         Self {
@@ -43,6 +45,7 @@ impl CameraController {
             view: None,
             camera_params: CameraParams::new(config.render_size),
             process_tx,
+            storage_tx,
             storage_status: StorageState::Unknown,
             config
         }
@@ -171,7 +174,10 @@ impl CameraController {
             },
             Ok(device) => {
                 self.set_detail("Device connected, reading basic info");
-                match ConnectedCameraController::new(device, self.process_tx.clone()) {
+
+                match ConnectedCameraController::new(
+                    device, self.process_tx.clone(), self.storage_tx.clone()
+                ) {
                     Ok(connected) => {
                         self.set_detail("Camera initialized");
                         self.connected = Some(connected);

@@ -1,6 +1,6 @@
 use std::sync::{Arc, mpsc::Sender};
 
-use ccdi_common::{ClientMessage, StateMessage, RgbImage, ProcessMessage};
+use ccdi_common::{ClientMessage, StateMessage, RgbImage, ProcessMessage, StorageMessage};
 
 use crate::{camera::CameraController, ServiceConfig};
 
@@ -16,6 +16,7 @@ impl BackendState {
     pub fn new(
         demo_mode: bool,
         process_tx: Sender<ProcessMessage>,
+        storage_tx: Sender<StorageMessage>,
         config: Arc<ServiceConfig>,
     ) -> Self {
         Self {
@@ -25,6 +26,7 @@ impl BackendState {
                     true => Box::new(ccdi_imager_demo::DemoImagerDriver::new()),
                 },
                 process_tx,
+                storage_tx,
                 config
             ),
             image: None,

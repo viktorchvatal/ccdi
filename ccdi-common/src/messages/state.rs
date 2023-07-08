@@ -29,7 +29,6 @@ pub enum CameraParamMessage {
     SetRenderingType(RenderingType),
 }
 
-
 #[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum RenderingType {
     FullImage,

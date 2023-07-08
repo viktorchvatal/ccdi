@@ -1,6 +1,6 @@
 use std::sync::{Arc, mpsc::Sender};
 
-use ccdi_common::{ExposureCommand, ClientMessage, ConnectionState, ProcessMessage, CameraParams};
+use ccdi_common::{ExposureCommand, ClientMessage, ConnectionState, ProcessMessage, CameraParams, StorageMessage};
 use ccdi_imager_interface::{ImagerDevice, ImagerProperties, TemperatureRequest};
 
 use super::{properties::{PropertiesController}, exposure::ExposureController};
@@ -18,10 +18,15 @@ pub struct ConnectedCameraController {
 impl ConnectedCameraController {
     pub fn new(
         mut device: Box<dyn ImagerDevice>,
-        process_tx: Sender<ProcessMessage>
+        process_tx: Sender<ProcessMessage>,
+        storage_tx: Sender<StorageMessage>,
     ) -> Result<Self, String> {
         let properties = PropertiesController::new(device.as_mut())?;
-        let exposure = ExposureController::new(properties.get_properties().basic, process_tx);
+
+        let exposure = ExposureController::new(
+            properties.get_properties().basic, process_tx, storage_tx
+        );
+
         let last_temperature_set = None;
         Ok(Self {properties, exposure, device, messages: vec![], last_temperature_set})
     }

@@ -1,6 +1,7 @@
-use std::{sync::Arc, process::Command};
+use std::{sync::Arc, process::Command, path::PathBuf};
 
 use ccdi_common::{StorageMessage, StateMessage, StorageState, StorageDetails, to_string};
+use log::info;
 
 use crate::ServiceConfig;
 
@@ -9,17 +10,38 @@ use crate::ServiceConfig;
 pub struct Storage {
     config: Arc<ServiceConfig>,
     last_storage_state: StorageState,
+    counter: usize,
+    storage_name: Option<String>,
 }
 
 impl Storage {
     pub fn new(config: Arc<ServiceConfig>) -> Self {
         Self {
             config,
-            last_storage_state: StorageState::Unknown
+            last_storage_state: StorageState::Unknown,
+            counter: 0,
+            storage_name: None,
         }
     }
 
     pub fn process(&mut self, message: StorageMessage) -> Result<Vec<StateMessage>, String> {
+        match message {
+            StorageMessage::EnableStore(name) => {
+                self.storage_name = Some(name);
+                self.counter = 0;
+            },
+            StorageMessage::DisableStore => {
+                self.storage_name = None;
+                self.counter = 0;
+            },
+            StorageMessage::ProcessImage(image) => {
+                if let Some(dir) = self.current_dir() {
+                    info!("Store: Dir: '{dir}' Id: {}", self.counter);
+                    self.counter += 1;
+                }
+            }
+        };
+
         Ok(vec![])
     }
 
@@ -36,6 +58,19 @@ impl Storage {
 }
 
 // =========================================== PRIVATE =============================================
+
+impl Storage {
+    fn current_dir(&self) -> Option<String> {
+        self.storage_name
+            .clone()
+            .and_then(
+                |dir| PathBuf::from(self.config.storage.clone())
+                    .join(PathBuf::from(dir))
+                    .to_str()
+                    .map(|path| path.to_owned())
+            )
+    }
+}
 
 fn check_storage(path: &str) -> StorageState {
     match Command::new("df").args([path]).output() {
