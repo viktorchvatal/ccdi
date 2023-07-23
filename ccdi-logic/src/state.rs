@@ -1,6 +1,6 @@
 use std::sync::{Arc, mpsc::Sender};
 
-use ccdi_common::{ClientMessage, StateMessage, RgbImage, ProcessMessage, StorageMessage};
+use ccdi_common::{ClientMessage, StateMessage, RgbImage, ProcessMessage, StorageMessage, IoMessage};
 
 use crate::{camera::CameraController, ServiceConfig};
 
@@ -70,7 +70,7 @@ impl BackendState {
     }
 
     /// Called periodically to perform any tasks needed and return messages for clients
-    pub fn periodic(&mut self) -> Result<Vec<ClientMessage>, String> {
+    pub fn periodic(&mut self) -> Result<(Vec<ClientMessage>, Vec<IoMessage>), String> {
         Ok(self.camera.periodic())
     }
 }

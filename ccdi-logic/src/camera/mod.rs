@@ -6,7 +6,7 @@ use std::sync::{mpsc::Sender, Arc};
 
 use ccdi_common::{
     ConnectionState, ViewState, LogicStatus, ExposureCommand, ClientMessage, ProcessMessage,
-    CameraParams, CameraParamMessage, StorageState, StorageMessage
+    CameraParams, CameraParamMessage, StorageState, StorageMessage, IoMessage
 };
 use ccdi_imager_interface::{ImagerDriver, DeviceDescriptor};
 use log::{info};
@@ -53,7 +53,7 @@ impl CameraController {
         }
     }
 
-    pub fn periodic(&mut self) -> Vec<ClientMessage> {
+    pub fn periodic(&mut self) -> (Vec<ClientMessage>, Vec<IoMessage>) {
         let old_state = self.state;
 
         self.state = match self.state {
@@ -78,7 +78,11 @@ impl CameraController {
             messages.append(&mut camera.flush_messages());
         }
 
-        messages
+        let states = vec![
+            IoMessage::SetExposureActive(self.exposure_active())
+        ];
+
+        (messages, states)
     }
 
     pub fn get_view(&self) -> ViewState {
@@ -145,6 +149,17 @@ impl CameraController {
 // =========================================== PRIVATE =============================================
 
 impl CameraController {
+    fn exposure_active(&self) -> bool {
+        let exposure_status = self.connected.as_ref()
+            .map(|cam| cam.exposure_status())
+            .unwrap_or(ConnectionState::Disconnected);
+
+        match exposure_status {
+            ConnectionState::Established => true,
+            _ => false,
+        }
+    }
+
     fn connection_state(&self) -> ConnectionState {
         match self.state {
             State::Error => ConnectionState::Connecting,

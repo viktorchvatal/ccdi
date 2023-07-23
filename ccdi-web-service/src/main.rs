@@ -65,7 +65,7 @@ fn main() {
     let _io_thread = start_io_thread(config.clone(), io_rx, server_tx.clone());
 
     let _server_thread = start_logic_thread(
-        params, config.clone(), server_rx, clients_tx, process_tx, storage_tx
+        params, config.clone(), server_rx, clients_tx, io_tx, process_tx, storage_tx,
     );
 
     tokio::runtime::Builder::new_multi_thread()

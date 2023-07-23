@@ -1,6 +1,6 @@
 use std::{sync::Arc, path::{PathBuf, Path}};
 
-use ccdi_common::{IoMessage, StateMessage, read_text_file};
+use ccdi_common::{IoMessage, StateMessage, read_text_file, save_text_file};
 use log::debug;
 
 use crate::{ServiceConfig, IoConfig};
@@ -10,7 +10,7 @@ use crate::{ServiceConfig, IoConfig};
 pub struct IoManager {
     last_trigger_value: Option<bool>,
     trigger_input_path: PathBuf,
-    trigger_status_path: PathBuf,
+    exposure_status_path: PathBuf,
     heating_pwm_path: PathBuf,
     main_status_path: PathBuf,
 }
@@ -20,13 +20,25 @@ impl IoManager {
         Self {
             last_trigger_value: None,
             trigger_input_path: PathBuf::from(config.trigger_input.clone()),
-            trigger_status_path: PathBuf::from(config.trigger_status.clone()),
+            exposure_status_path: PathBuf::from(config.exposure_status.clone()),
             heating_pwm_path: PathBuf::from(config.heating_pwm.clone()),
             main_status_path: PathBuf::from(config.main_status.clone()),
         }
     }
 
     pub fn process(&mut self, message: IoMessage) -> Result<Vec<StateMessage>, String> {
+        match message {
+            IoMessage::SetHeating(_) => {
+
+            },
+            IoMessage::SetExposureActive(value) => {
+                let _ = write_output(&self.exposure_status_path, value);
+            },
+            IoMessage::SetStatus(_) => {
+
+            },
+        }
+
         Ok(vec![])
     }
 
@@ -67,4 +79,14 @@ fn read_input(path: &Path) -> Option<bool> {
             None
         }
     }
+}
+
+fn write_output(path: &Path, value: bool) -> Result<(), String> {
+    save_text_file(
+        match value {
+            false => "0",
+            true => "1",
+        },
+        path
+    )
 }

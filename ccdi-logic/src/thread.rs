@@ -21,6 +21,7 @@ pub fn start_logic_thread(
     config: Arc<ServiceConfig>,
     server_rx: Receiver<StateMessage>,
     clients_tx: Sender<ClientMessage>,
+    io_tx: Sender<IoMessage>,
     process_tx: Sender<ProcessMessage>,
     storage_tx: Sender<StorageMessage>,
 ) -> Result<JoinHandle<()>, String> {
@@ -36,7 +37,9 @@ pub fn start_logic_thread(
                     // Last sender disconnected - exit thread
                     Err(RecvTimeoutError::Disconnected) => return,
                     // No messages received within timeout - perform periodic tasks
-                    Err(RecvTimeoutError::Timeout) => periodic_tasks(&mut state, &clients_tx),
+                    Err(RecvTimeoutError::Timeout) => periodic_tasks(
+                        &mut state, &clients_tx, &io_tx
+                    ),
                 }
             }
         })
@@ -164,9 +167,11 @@ fn receive_message(
 fn periodic_tasks(
     state: &mut BackendState,
     clients_tx: &Sender<ClientMessage>,
+    io_tx: &Sender<IoMessage>,
 ) {
-    if let Some(responses) = log_err("Perform periodic tasks", state.periodic()) {
-        send_client_messages(responses, clients_tx);
+    if let Some((client, io)) = log_err("Perform periodic tasks", state.periodic()) {
+        send_client_messages(client, clients_tx);
+        send_io_messages(io, io_tx);
     }
 }
 
@@ -176,5 +181,14 @@ fn send_client_messages(
 ) {
     for message in messages {
         log_err("Send client response", clients_tx.send(message));
+    }
+}
+
+fn send_io_messages(
+    messages: Vec<IoMessage>,
+    io_tx: &Sender<IoMessage>,
+) {
+    for message in messages {
+        log_err("Send io response", io_tx.send(message));
     }
 }

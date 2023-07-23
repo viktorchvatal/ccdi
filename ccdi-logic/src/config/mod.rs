@@ -29,7 +29,7 @@ impl Default for ServiceConfig {
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct IoConfig {
     pub trigger_input: String,
-    pub trigger_status: String,
+    pub exposure_status: String,
     pub heating_pwm: String,
     pub main_status: String,
 }
@@ -38,7 +38,7 @@ impl Default for IoConfig {
     fn default() -> Self {
         Self {
             trigger_input: String::from("/sys/class/gpio/gpio17/value"),
-            trigger_status: String::from("/sys/class/gpio/gpio2/value"),
+            exposure_status: String::from("/sys/class/gpio/gpio2/value"),
             heating_pwm: String::from("/sys/class/gpio/gpio4/value"),
             main_status: String::from("/sys/class/gpio/gpio3/value")
         }
