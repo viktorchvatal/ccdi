@@ -52,6 +52,7 @@ pub struct CameraParams {
     pub rendering: RenderingType,
     pub render_size: ImgSize,
     pub temperature: f32,
+    pub trigger_required: bool,
 }
 
 impl CameraParams {
@@ -63,6 +64,7 @@ impl CameraParams {
             rendering: RenderingType::FullImage,
             render_size,
             temperature: 20.0,
+            trigger_required: false,
         }
     }
 }
@@ -78,6 +80,7 @@ pub struct LogicStatus {
     pub camera: ConnectionState,
     pub exposure: ConnectionState,
     pub storage: StorageState,
+    pub trigger: ConnectionState,
 }
 
 impl Default for LogicStatus {
@@ -85,6 +88,7 @@ impl Default for LogicStatus {
         Self {
             camera: ConnectionState::Disconnected,
             exposure: ConnectionState::Disconnected,
+            trigger: ConnectionState::Disconnected,
             storage: StorageState::Unknown,
         }
     }

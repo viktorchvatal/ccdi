@@ -62,6 +62,10 @@ impl BackendState {
                 self.camera.update_storage_status(storage_state);
                 vec![ClientMessage::View(self.camera.get_view())]
             },
+            TriggerValueChanged(value) => {
+                self.camera.update_trigger_status(value);
+                vec![]
+            },
         })
     }
 

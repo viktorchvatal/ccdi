@@ -1,10 +1,14 @@
 use std::{thread::{self, JoinHandle}, time::Duration, sync::{mpsc::RecvTimeoutError, Arc}};
 use std::sync::mpsc::{Sender, Receiver};
 
-use ccdi_common::{StateMessage, ClientMessage, log_err, ProcessMessage, StorageMessage};
+use ccdi_common::{StateMessage, ClientMessage, log_err, ProcessMessage, StorageMessage, IoMessage};
 use log::{error, debug};
 
-use crate::{state::BackendState, convert::handle_process_message, ServiceConfig, storage::Storage};
+use crate::{
+    state::BackendState,
+    convert::handle_process_message, ServiceConfig, storage::Storage,
+    io::IoManager
+};
 
 // ============================================ PUBLIC =============================================
 
@@ -92,7 +96,7 @@ pub fn start_storage_thread(
                     }
                 },
                 Err(error) => error!(
-                    "Processing storage messages or periadic task failed: {}", error
+                    "Processing storage messages or periodic task failed: {}", error
                 )
             };
 
@@ -104,6 +108,41 @@ pub fn start_storage_thread(
                     Err(RecvTimeoutError::Disconnected) => return,
                     // No messages received within timeout - perform periodic tasks
                     Err(RecvTimeoutError::Timeout) => send_results(storage.periodic_tasks()),
+                }
+            }
+        })
+        .map_err(|err| format!("{:?}", err))
+}
+
+pub fn start_io_thread(
+    config: Arc<ServiceConfig>,
+    storage_rx: Receiver<IoMessage>,
+    server_tx: Sender<StateMessage>,
+) -> Result<JoinHandle<()>, String> {
+    thread::Builder::new()
+        .name("logic".to_string())
+        .spawn(move || {
+            let mut io = IoManager::new(&config.io);
+
+            let send_results = |result: Result<Vec<StateMessage>, String>| match result {
+                Ok(messages) => {
+                    for message in messages {
+                        log_err("Send message from storage to server", server_tx.send(message));
+                    }
+                },
+                Err(error) => error!(
+                    "Processing storage messages or periodic task failed: {}", error
+                )
+            };
+
+            loop {
+                match storage_rx.recv_timeout(Duration::from_millis(50)) {
+                    // Process the received message
+                    Ok(message) => send_results(io.process(message)),
+                    // Last sender disconnected - exit thread
+                    Err(RecvTimeoutError::Disconnected) => return,
+                    // No messages received within timeout - perform periodic tasks
+                    Err(RecvTimeoutError::Timeout) => send_results(io.periodic_tasks()),
                 }
             }
         })

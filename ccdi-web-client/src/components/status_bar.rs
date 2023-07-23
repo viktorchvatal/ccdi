@@ -28,6 +28,7 @@ impl Component for StatusBar {
             <div class="status-bar-body float-container">
                 { state_view("Connection", main_state) }
                 { combined("Camera", main_state, ctx.props().logic.camera) }
+                { combined("Trigger", main_state, ctx.props().logic.trigger) }
                 { combined("Exposure", main_state, ctx.props().logic.exposure) }
                 { combined("Storage", main_state, ctx.props().logic.storage.as_connection_state()) }
             </div>

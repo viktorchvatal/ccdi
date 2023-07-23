@@ -76,4 +76,8 @@ impl ConnectedCameraController {
             true => ConnectionState::Established
         }
     }
+
+    pub fn update_trigger_status(&mut self, value: bool) {
+        self.exposure.update_trigger_status(value);
+    }
 }

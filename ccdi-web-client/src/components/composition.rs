@@ -37,6 +37,7 @@ impl Component for CompositionDetail {
         use CameraParamMessage::*;
 
         let loop_enabled = ctx.props().camera_params.loop_enabled;
+        let trigger_required = ctx.props().camera_params.trigger_required;
 
         let server_action = |action: StateMessage| ctx.link().callback(
             move |_| Msg::ServerAction(action.clone())
@@ -44,20 +45,34 @@ impl Component for CompositionDetail {
 
         html!{
             <div>
-                <div>{"Composition"}</div>
-                <button onclick={
-                    server_action(ExposureMessage(ExposureCommand::Start))
-                }>{"Expose"}</button>
-                <button
-                    class={classes!(if loop_enabled { Some("button-selected") } else { None })}
-                    onclick={server_action(CameraParam(EnableLoop(true)))}
-                    >{"Start Loop"}
-                </button>
-                <button
-                    class={classes!(if !loop_enabled { Some("button-selected") } else { None })}
-                    onclick={server_action(CameraParam(EnableLoop(false)))}
-                    >{"End Loop"}
-                </button>
+                <div>
+                    <p>{"Exposition"}</p>
+                    <button
+                        class={classes!(if !loop_enabled { Some("button-selected") } else { None })}
+                        onclick={server_action(CameraParam(EnableLoop(false)))}
+                        >{"Loop OFF"}
+                    </button>
+                    <button
+                        class={classes!(if loop_enabled { Some("button-selected") } else { None })}
+                        onclick={server_action(CameraParam(EnableLoop(true)))}
+                        >{"Loop ON"}
+                    </button>
+                    <button onclick={
+                        server_action(ExposureMessage(ExposureCommand::Start))
+                    }>{"Expose"}</button>
+                </div>
+                <div>
+                    <button
+                        class={classes!(if !trigger_required { Some("button-selected") } else { None })}
+                        onclick={server_action(CameraParam(SetTriggerRequired(false)))}
+                        >{"Trigger OFF"}
+                    </button>
+                    <button
+                        class={classes!(if trigger_required { Some("button-selected") } else { None })}
+                        onclick={server_action(CameraParam(SetTriggerRequired(true)))}
+                        >{"Trigger ON"}
+                    </button>
+                </div>
             </div>
         }
     }

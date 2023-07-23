@@ -16,6 +16,7 @@ pub struct ExposureController {
     current_exposure: Option<ExposureParams>,
     process_tx: Sender<ProcessMessage>,
     storage_tx: Sender<StorageMessage>,
+    trigger_active: bool,
 }
 
 impl ExposureController {
@@ -30,6 +31,7 @@ impl ExposureController {
             current_exposure: None,
             process_tx,
             storage_tx,
+            trigger_active: false,
         }
     }
 
@@ -51,7 +53,9 @@ impl ExposureController {
         }
 
         if !self.exposure_active() && self.camera_params.loop_enabled {
-            self.start_exposure(device)?;
+            if self.trigger_active || !self.camera_params.trigger_required  {
+                self.start_exposure(device)?;
+            }
         }
 
         Ok(vec![])
@@ -73,6 +77,10 @@ impl ExposureController {
 
     pub fn exposure_active(&self) -> bool {
         self.current_exposure.is_some()
+    }
+
+    pub fn update_trigger_status(&mut self, value: bool) {
+        self.trigger_active = value;
     }
 }
 

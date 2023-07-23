@@ -13,6 +13,7 @@ pub enum StateMessage {
     ClientConnected,
     ImageDisplayed(Arc<RgbImage<u16>>),
     UpdateStorageState(StorageState),
+    TriggerValueChanged(bool),
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
@@ -27,6 +28,7 @@ pub enum CameraParamMessage {
     SetTime(f64),
     SetTemp(f32),
     SetRenderingType(RenderingType),
+    SetTriggerRequired(bool),
 }
 
 #[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]

@@ -4,6 +4,7 @@ mod config;
 mod static_files;
 
 use ccdi_common::ClientMessage;
+use ccdi_common::IoMessage;
 use ccdi_common::ProcessMessage;
 use ccdi_common::StateMessage;
 use ccdi_common::StorageMessage;
@@ -11,6 +12,7 @@ use ccdi_common::init_logger;
 use ccdi_logic::LogicParams;
 use ccdi_logic::create_default_config_file;
 use ccdi_logic::load_config_file;
+use ccdi_logic::start_io_thread;
 use ccdi_logic::start_logic_thread;
 use ccdi_logic::start_process_thread;
 use ccdi_logic::start_storage_thread;
@@ -56,9 +58,11 @@ fn main() {
     let (clients_tx, clients_rx) = std::sync::mpsc::channel::<ClientMessage>();
     let (process_tx, process_rx) = std::sync::mpsc::channel::<ProcessMessage>();
     let (storage_tx, storage_rx) = std::sync::mpsc::channel::<StorageMessage>();
+    let (io_tx, io_rx) = std::sync::mpsc::channel::<IoMessage>();
 
     let _storage_thread = start_storage_thread(config.clone(), storage_rx, server_tx.clone());
     let _process_thread = start_process_thread(process_rx, clients_tx.clone(), server_tx.clone());
+    let _io_thread = start_io_thread(config.clone(), io_rx, server_tx.clone());
 
     let _server_thread = start_logic_thread(
         params, config.clone(), server_rx, clients_tx, process_tx, storage_tx

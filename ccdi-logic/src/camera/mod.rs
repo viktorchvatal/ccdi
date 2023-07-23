@@ -28,6 +28,7 @@ pub struct CameraController {
     storage_tx: Sender<StorageMessage>,
     storage_status: StorageState,
     config: Arc<ServiceConfig>,
+    trigger_active: bool,
 }
 
 impl CameraController {
@@ -47,7 +48,8 @@ impl CameraController {
             process_tx,
             storage_tx,
             storage_status: StorageState::Unknown,
-            config
+            config,
+            trigger_active: false,
         }
     }
 
@@ -86,7 +88,11 @@ impl CameraController {
                 camera: self.connection_state(),
                 exposure: self.connected.as_ref().map(|cam| cam.exposure_status())
                     .unwrap_or(ConnectionState::Disconnected),
-                storage: self.storage_status.clone()
+                storage: self.storage_status.clone(),
+                trigger: match self.trigger_active {
+                    false => ConnectionState::Disconnected,
+                    true => ConnectionState::Established,
+                }
             },
             camera_properties: self.connected.as_ref().map(|cam| cam.get_properties()),
             camera_params: self.camera_params.clone(),
@@ -103,6 +109,7 @@ impl CameraController {
             SetTemp(temp) => self.camera_params.temperature = temp,
             SetTime(time) => self.camera_params.time = time,
             SetRenderingType(rendering) => self.camera_params.rendering = rendering,
+            SetTriggerRequired(value) => self.camera_params.trigger_required = value,
         }
 
         if let Some(camera) =  self.connected.as_mut() {
@@ -124,6 +131,14 @@ impl CameraController {
 
     pub fn update_storage_status(&mut self, message: StorageState) {
         self.storage_status = message;
+    }
+
+    pub fn update_trigger_status(&mut self, value: bool) {
+        self.trigger_active = value;
+
+        if let Some(ref mut camera) = self.connected {
+            camera.update_trigger_status(value);
+        }
     }
 }
 
