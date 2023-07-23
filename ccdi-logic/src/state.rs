@@ -66,6 +66,10 @@ impl BackendState {
                 self.camera.update_trigger_status(value);
                 vec![]
             },
+            SetDirectory(directory) => {
+                // TODO: set directory in storage thread
+                vec![]
+            },
         })
     }
 

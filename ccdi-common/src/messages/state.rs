@@ -14,6 +14,7 @@ pub enum StateMessage {
     ImageDisplayed(Arc<RgbImage<u16>>),
     UpdateStorageState(StorageState),
     TriggerValueChanged(bool),
+    SetDirectory(String),
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]

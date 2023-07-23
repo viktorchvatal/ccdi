@@ -11,16 +11,18 @@ use gloo::console;
 use yew::html::Scope;
 use yew::{html, Component, Context, Html};
 
-use components::composition::CompositionDetail;
 use components::camera::CameraDetail;
 use components::footer::Footer;
 use components::menu::{Menu, MenuItem};
 use components::status_bar::StatusBar;
+use selectors::composition::CompositionDetail;
 use selectors::picture::Picture;
 use selectors::time::TimeSelector;
 use selectors::gain::GainSelector;
 use selectors::cooling::CoolingSelector;
 use selectors::rendering::RenderingSelector;
+
+use crate::selectors::shooting::ShootingDetail;
 
 // ============================================ PUBLIC =============================================
 
@@ -126,10 +128,16 @@ impl Main {
             .callback(|action: StateMessage| Msg::SendMessage(action));
 
         html!{
-            <CompositionDetail
-                on_action={action}
-                camera_params={self.view_state.camera_params.clone()}
-            />
+            <div>
+                <ShootingDetail
+                    on_action={action.clone()}
+                />
+
+                <CompositionDetail
+                    on_action={action}
+                    camera_params={self.view_state.camera_params.clone()}
+                />
+            </div>
         }
     }
 }
