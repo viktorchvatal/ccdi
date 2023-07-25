@@ -8,7 +8,8 @@ use crate::RawImage;
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum StorageMessage {
-    EnableStore(String),
+    EnableStore,
     DisableStore,
     ProcessImage(Arc<RawImage>),
+    SetDirectory(String),
 }

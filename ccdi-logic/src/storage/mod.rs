@@ -12,6 +12,7 @@ pub struct Storage {
     last_storage_state: StorageState,
     counter: usize,
     storage_name: Option<String>,
+    storage_active: bool,
 }
 
 impl Storage {
@@ -21,23 +22,30 @@ impl Storage {
             last_storage_state: StorageState::Unknown,
             counter: 0,
             storage_name: None,
+            storage_active: false,
         }
     }
 
     pub fn process(&mut self, message: StorageMessage) -> Result<Vec<StateMessage>, String> {
         match message {
-            StorageMessage::EnableStore(name) => {
+            StorageMessage::SetDirectory(name) => {
                 self.storage_name = Some(name);
                 self.counter = 0;
             },
             StorageMessage::DisableStore => {
-                self.storage_name = None;
+                self.storage_active = false;
+                self.counter = 0;
+            },
+            StorageMessage::EnableStore => {
+                self.storage_active = true;
                 self.counter = 0;
             },
             StorageMessage::ProcessImage(image) => {
                 if let Some(dir) = self.current_dir() {
-                    info!("Store: Dir: '{dir}' Id: {}", self.counter);
-                    self.counter += 1;
+                    if self.storage_active {
+                        info!("Store: Dir: '{dir}' Id: {}", self.counter);
+                        self.counter += 1;
+                    }
                 }
             }
         };

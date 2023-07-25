@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use serde_derive::{Serialize, Deserialize};
 
-use crate::{RgbImage, StorageState};
+use crate::{RgbImage, StorageState, StorageMessage};
 
 // ============================================ PUBLIC =============================================
 
@@ -14,7 +14,7 @@ pub enum StateMessage {
     ImageDisplayed(Arc<RgbImage<u16>>),
     UpdateStorageState(StorageState),
     TriggerValueChanged(bool),
-    SetDirectory(String),
+    StorageMessage(StorageMessage),
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]

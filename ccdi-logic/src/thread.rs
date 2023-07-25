@@ -28,12 +28,14 @@ pub fn start_logic_thread(
     thread::Builder::new()
         .name("logic".to_string())
         .spawn(move || {
-            let mut state = BackendState::new(params.demo_mode, process_tx, storage_tx, config);
+            let mut state = BackendState::new(
+                params.demo_mode, process_tx, storage_tx.clone(), config
+            );
 
             loop {
                 match server_rx.recv_timeout(Duration::from_millis(50)) {
                     // Process the received message
-                    Ok(message) => receive_message(&mut state, message, &clients_tx),
+                    Ok(message) => receive_message(&mut state, message, &clients_tx, &storage_tx),
                     // Last sender disconnected - exit thread
                     Err(RecvTimeoutError::Disconnected) => return,
                     // No messages received within timeout - perform periodic tasks
@@ -158,9 +160,11 @@ fn receive_message(
     state: &mut BackendState,
     message: StateMessage,
     clients_tx: &Sender<ClientMessage>,
+    storage_tx: &Sender<StorageMessage>,
 ) {
     if let Some(responses) = log_err("Process state message", state.process(message)) {
-        send_client_messages(responses, clients_tx);
+        send_client_messages(responses.client_messages, clients_tx);
+        send_storage_messages(responses.storage_messages, storage_tx);
     }
 }
 
@@ -190,5 +194,14 @@ fn send_io_messages(
 ) {
     for message in messages {
         log_err("Send io response", io_tx.send(message));
+    }
+}
+
+fn send_storage_messages(
+    messages: Vec<StorageMessage>,
+    storage_tx: &Sender<StorageMessage>,
+) {
+    for message in messages {
+        log_err("Send storage response", storage_tx.send(message));
     }
 }

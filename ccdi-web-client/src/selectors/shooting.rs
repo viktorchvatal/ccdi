@@ -36,7 +36,9 @@ impl Component for ShootingDetail {
         match msg {
             Msg::UpdateEditedName(name) => self.edited_name = name,
             Msg::SetDirectory => ctx.props().on_action.emit(
-                StateMessage::SetDirectory(self.edited_name.clone())
+                StateMessage::StorageMessage(
+                    StorageMessage::SetDirectory(self.edited_name.clone())
+                )
             ),
         }
         false

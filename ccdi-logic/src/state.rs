@@ -34,41 +34,45 @@ impl BackendState {
     }
 
     /// Process incoming message and return messages to be sent to clients
-    pub fn process(&mut self, message: StateMessage) -> Result<Vec<ClientMessage>, String> {
+    pub fn process(&mut self, message: StateMessage) -> Result<BackendResult, String> {
         use StateMessage::*;
 
         Ok(match message {
             ImageDisplayed(image) => {
                 self.image = Some(image);
-                vec![]
+                BackendResult::empty()
             },
             CameraParam(message) => {
                 self.camera.update_camera_params(message);
-                vec![ClientMessage::View(self.camera.get_view())]
+                self.return_view()
             },
             ExposureMessage(command) => {
                 self.camera.exposure_command(command);
-                vec![ClientMessage::View(self.camera.get_view())]
+                self.return_view()
             },
             ClientConnected => {
                 let view_msg = ClientMessage::View(self.camera.get_view());
 
-                match self.image.as_ref() {
-                    None => vec![view_msg],
-                    Some(image) => vec![view_msg, ClientMessage::RgbImage(image.clone())],
-                }
+                BackendResult::client(
+                    match self.image.as_ref() {
+                        None => vec![view_msg],
+                        Some(image) => vec![view_msg, ClientMessage::RgbImage(image.clone())],
+                    }
+                )
             }
             UpdateStorageState(storage_state) => {
                 self.camera.update_storage_status(storage_state);
-                vec![ClientMessage::View(self.camera.get_view())]
+                self.return_view()
             },
             TriggerValueChanged(value) => {
                 self.camera.update_trigger_status(value);
-                vec![]
+                BackendResult::empty()
             },
-            SetDirectory(directory) => {
-                // TODO: set directory in storage thread
-                vec![]
+            StorageMessage(message) => {
+                BackendResult {
+                    client_messages: vec![],
+                    storage_messages: vec![message],
+                }
             },
         })
     }
@@ -79,4 +83,31 @@ impl BackendState {
     }
 }
 
+pub struct BackendResult {
+    pub client_messages: Vec<ClientMessage>,
+    pub storage_messages: Vec<StorageMessage>,
+}
+
+impl BackendResult {
+    pub fn empty() -> Self {
+        BackendResult { client_messages: vec![], storage_messages: vec![] }
+    }
+
+    pub fn client(client_messages: Vec<ClientMessage>) -> Self {
+        Self {
+            client_messages,
+            storage_messages: vec![],
+        }
+    }
+}
+
 // =========================================== PRIVATE =============================================
+
+impl BackendState {
+    fn return_view(&self) -> BackendResult {
+        BackendResult {
+            client_messages: vec![ClientMessage::View(self.camera.get_view())],
+            storage_messages: vec![]
+        }
+    }
+}
