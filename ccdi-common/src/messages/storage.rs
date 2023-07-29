@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use serde_derive::{Serialize, Deserialize};
 
-use crate::RawImage;
+use crate::{RawImage, StorageState};
 
 // ============================================ PUBLIC =============================================
 
@@ -20,6 +20,7 @@ pub struct StorageDetail {
     pub counter: usize,
     pub storage_log: Vec<StorageLogRecord>,
     pub storage_enabled: bool,
+    pub state: StorageState,
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
@@ -41,6 +42,7 @@ impl Default for StorageDetail {
             counter: 0,
             storage_log: Vec::new(),
             storage_enabled: false,
+            state: StorageState::Unknown,
         }
     }
 }

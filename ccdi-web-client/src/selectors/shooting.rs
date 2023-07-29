@@ -1,4 +1,5 @@
 use ccdi_common::ExposureCommand;
+use serde::__private::de;
 use wasm_bindgen::{UnwrapThrowExt, JsCast};
 use web_sys::{HtmlInputElement, Event};
 use yew::{Properties, Callback, use_state, InputEvent};
@@ -52,6 +53,7 @@ impl Component for ShootingDetail {
 
         let on_change = ctx.link().callback(Msg::UpdateEditedName);
         let set_dir_click = || ctx.link().callback(move |_| Msg::SetDirectory);
+        let details = &ctx.props().storage_details;
         let enabled = ctx.props().storage_details.storage_enabled;
 
         let server_action = |action: StateMessage| ctx.link().callback(
@@ -61,9 +63,13 @@ impl Component for ShootingDetail {
         html!{
             <div>
                 <div>
-                    <p>{"Directory"}</p>
+                    <p>{format_capacity(&details.state)}</p>
+                    <p>{format!("Counter: {}", &details.counter)}</p>
+                    <p>{format!("Directory: {}", &details.storage_name)}</p>
+                </div>
+                <div>
+                    <p>{"Change Directory"}</p>
                     <TextInput {on_change} value={self.edited_name.clone()}/>
-                    <div>{self.edited_name.as_str()}</div>
                     <button onclick={set_dir_click()}>{"Set dir"}</button>
                 </div>
                 <div>
@@ -80,5 +86,15 @@ impl Component for ShootingDetail {
                 </div>
             </div>
         }
+    }
+}
+
+fn format_capacity(capacity: &StorageState) -> String {
+    match capacity {
+        StorageState::Unknown => String::from("?"),
+        StorageState::Error(error) => format!("Storage not available: {:?}", error),
+        StorageState::Available(details) => format!(
+            "Storage: {:1.1}G of {:1.1}G free", details.free_gigabytes, details.total_gigabytes
+        ),
     }
 }

@@ -1,6 +1,6 @@
 use std::{sync::Arc, process::Command, path::{PathBuf, Path}, collections::VecDeque};
 
-use ccdi_common::{StorageMessage, StateMessage, StorageState, StorageDetails, to_string, StorageLogRecord, RawImage, StorageLogStatus, StorageDetail};
+use ccdi_common::{StorageMessage, StateMessage, StorageState, StorageCapacity, to_string, StorageLogRecord, RawImage, StorageLogStatus, StorageDetail};
 use log::{info, debug};
 
 use crate::ServiceConfig;
@@ -79,6 +79,7 @@ impl Storage {
             counter: self.counter,
             storage_log: self.details.iter().cloned().collect(),
             storage_enabled: self.storage_active,
+            state: self.last_storage_state.clone(),
         }
     }
 
@@ -153,11 +154,11 @@ fn check_storage(path: &str) -> StorageState {
     }
 }
 
-fn parse_free_space(stdout: &str) -> Result<StorageDetails, String> {
+fn parse_free_space(stdout: &str) -> Result<StorageCapacity, String> {
     let line = stdout.lines().nth(1).ok_or("df output second line missing")?;
     let total_gigabytes = kb_to_gb(parse_nth_token(line, 1)?);
     let free_gigabytes = kb_to_gb(parse_nth_token(line, 3)?);
-    Ok(StorageDetails{total_gigabytes, free_gigabytes})
+    Ok(StorageCapacity{total_gigabytes, free_gigabytes})
 }
 
 fn parse_nth_token(line: &str, index: usize) -> Result<f64, String> {

@@ -8,7 +8,7 @@ use crate::ConnectionState;
 pub enum StorageState {
     Unknown,
     Error(String),
-    Available(StorageDetails)
+    Available(StorageCapacity)
 }
 
 impl StorageState {
@@ -22,7 +22,7 @@ impl StorageState {
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
-pub struct StorageDetails {
+pub struct StorageCapacity {
     pub total_gigabytes: f64,
     pub free_gigabytes: f64,
 }
