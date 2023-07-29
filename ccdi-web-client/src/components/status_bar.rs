@@ -29,11 +29,11 @@ impl Component for StatusBar {
                 { state_view("Connection", main_state) }
                 { combined("Camera", main_state, ctx.props().logic.camera) }
                 { combined("Storage", main_state, ctx.props().logic.storage.as_connection_state()) }
-                { combined("Trigger", main_state, ctx.props().logic.trigger) }
-                { combined("Required", main_state, ctx.props().logic.required) }
                 { combined("Loop", main_state, ctx.props().logic.loop_enabled) }
+                { combined("Trigger Needed", main_state, ctx.props().logic.required) }
+                { combined("Trigger On", main_state, ctx.props().logic.trigger) }
                 { combined("Exposure", main_state, ctx.props().logic.exposure) }
-                { combined("Save", main_state, ctx.props().logic.save) }
+                { combined("Save On", main_state, ctx.props().logic.save) }
             </div>
         }
     }

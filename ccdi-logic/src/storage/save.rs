@@ -12,7 +12,7 @@ pub fn save_fits_file(image: &RawImage, file_name: &str) -> Result<(), String> {
     std::fs::create_dir_all(prefix).map_err(to_string)?;
 
     let description = ImageDescription {
-        data_type: ImageType::Short,
+        data_type: ImageType::UnsignedShort,
         dimensions: &[image.params.area.height, image.params.area.width],
     };
 

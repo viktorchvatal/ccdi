@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use base64::{engine::general_purpose::STANDARD, Engine};
 use ccdi_common::RgbImage;
-use ccdi_image::{Transform, TransformFunction, rgb_image_to_jpeg};
+use ccdi_image::{Transform, TransformFunction, rgb_image_to_jpeg, compute_image_stats, ImageStats};
 use yew::Properties;
 use super::*;
 
@@ -50,25 +50,31 @@ impl Component for Picture {
         };
 
         html! {
-            <div class="image-main">
-                <div  class="image-tools">
-                    <p>{"View"}</p>
-                    <hr />
-                    <p>{"Gain"}</p>
-                    { gain_button(ctx, self.gain, 1) }
-                    { gain_button(ctx, self.gain, 2) }
-                    { gain_button(ctx, self.gain, 4) }
-                    { gain_button(ctx, self.gain, 8) }
-                    { gain_button(ctx, self.gain, 16) }
-                    { gain_button(ctx, self.gain, 32) }
-                    { gain_button(ctx, self.gain, 64) }
-                    <p>{"Func"}</p>
-                    { function_button(ctx, self.function, TransformFunction::Linear, "Line") }
-                    { function_button(ctx, self.function, TransformFunction::Sqrt, "Sqrt") }
-                    { function_button(ctx, self.function, TransformFunction::Log2, "Log2") }
+            <div>
+                <div class="image-main">
+                    <div  class="image-tools">
+                        <p>{"View"}</p>
+                        <hr />
+                        <p>{"Gain"}</p>
+                        { gain_button(ctx, self.gain, 1) }
+                        { gain_button(ctx, self.gain, 2) }
+                        { gain_button(ctx, self.gain, 4) }
+                        { gain_button(ctx, self.gain, 8) }
+                        { gain_button(ctx, self.gain, 16) }
+                        { gain_button(ctx, self.gain, 32) }
+                        { gain_button(ctx, self.gain, 64) }
+                        <p>{"Func"}</p>
+                        { function_button(ctx, self.function, TransformFunction::Linear, "Line") }
+                        { function_button(ctx, self.function, TransformFunction::Sqrt, "Sqrt") }
+                        { function_button(ctx, self.function, TransformFunction::Log2, "Log2") }
+                    </div>
+                    <div class="image-content">
+                        {rgb_image_to_html(ctx.props().image.as_deref(), transform)}
+                    </div>
                 </div>
-                <div class="image-content">
-                    {rgb_image_to_html(ctx.props().image.as_deref(), transform)}
+                <div>
+                    {render_stats(ctx.props().image.as_deref().map(|img| compute_image_stats(img)))
+                    }
                 </div>
             </div>
         }
@@ -128,4 +134,21 @@ fn rgb_to_jpeg_base64(image: &RgbImage<u16>, transform: Transform) -> Option<Str
     let encoded_jpeg = rgb_image_to_jpeg(image, transform).ok()?;
     let encoded_base64 = STANDARD.encode(&encoded_jpeg);
     Some(encoded_base64)
+}
+
+fn render_stats(stats: Option<ImageStats>) -> Html {
+    let stats_text = match stats {
+        None => String::new(),
+        Some(stats) => format!(
+            "All: [{}–{}] R: [{}–{}] G: [{}–{}] B: [{}–{}]",
+            stats.total.min, stats.total.max,
+            stats.r.min, stats.r.max,
+            stats.g.min, stats.g.max,
+            stats.b.min, stats.b.max,
+        )
+    };
+
+    html!{
+        <div>{stats_text}</div>
+    }
 }

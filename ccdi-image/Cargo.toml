@@ -7,6 +7,8 @@ edition = "2021"
 log = "0.4.17"
 ccdi-common = { path = "../ccdi-common" }
 
+nanocv = { git = "https://github.com/viktorchvatal/nanocv.git", features = ["serde"] }
+
 [dependencies.image]
 version = "0.24.6"
 default-features = false

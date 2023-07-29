@@ -41,12 +41,10 @@ impl Storage {
             StorageMessage::DisableStore => {
                 debug!("Storage disabled");
                 self.storage_active = false;
-                self.counter = 0;
             },
             StorageMessage::EnableStore => {
                 debug!("Storage enabled");
                 self.storage_active = true;
-                self.counter = 0;
             },
             StorageMessage::ProcessImage(image) => {
                 if self.storage_active {

@@ -61,7 +61,7 @@ impl ImagerDevice for DemoImagerDevice {
     fn download_image(&mut self, params: &ExposureParams) -> Result<Vec<u16>, String> {
         Ok(
             (0..(params.area.pixel_count()))
-                .map(|x| ((x/30) % 12000) as u16)
+                .map(|x| ((x/30) % 12000) as u16*100)
                 .collect()
         )
     }
