@@ -6,3 +6,4 @@ pub mod footer;
 pub mod menu;
 pub mod camera;
 pub mod text_input;
+pub mod shooting_details;

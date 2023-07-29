@@ -6,10 +6,11 @@ use std::sync::{mpsc::Sender, Arc};
 
 use ccdi_common::{
     ConnectionState, ViewState, LogicStatus, ExposureCommand, ClientMessage, ProcessMessage,
-    CameraParams, CameraParamMessage, StorageState, StorageMessage, IoMessage
+    CameraParams, CameraParamMessage, StorageState, StorageMessage, IoMessage, StorageDetail
 };
 use ccdi_imager_interface::{ImagerDriver, DeviceDescriptor};
 use log::{info};
+use serde::__private::de;
 
 use crate::{ServiceConfig};
 
@@ -29,6 +30,7 @@ pub struct CameraController {
     storage_status: StorageState,
     config: Arc<ServiceConfig>,
     trigger_active: bool,
+    storage_detail: StorageDetail,
 }
 
 impl CameraController {
@@ -50,6 +52,7 @@ impl CameraController {
             storage_status: StorageState::Unknown,
             config,
             trigger_active: false,
+            storage_detail: Default::default(),
         }
     }
 
@@ -86,6 +89,11 @@ impl CameraController {
     }
 
     pub fn get_view(&self) -> ViewState {
+        let into_state = |value: bool| match value {
+            false => ConnectionState::Disconnected,
+            true => ConnectionState::Established,
+        };
+
         ViewState {
             detail: self.detail.clone(),
             status: LogicStatus {
@@ -93,14 +101,16 @@ impl CameraController {
                 exposure: self.connected.as_ref().map(|cam| cam.exposure_status())
                     .unwrap_or(ConnectionState::Disconnected),
                 storage: self.storage_status.clone(),
-                trigger: match self.trigger_active {
-                    false => ConnectionState::Disconnected,
-                    true => ConnectionState::Established,
-                }
+                trigger: into_state(self.trigger_active),
+                required: into_state(self.camera_params.trigger_required),
+                save: into_state(self.storage_detail.storage_enabled),
+                loop_enabled: into_state(self.camera_params.loop_enabled),
+
             },
             camera_properties: self.connected.as_ref().map(|cam| cam.get_properties()),
             camera_params: self.camera_params.clone(),
-            config: self.config.gui.clone()
+            config: self.config.gui.clone(),
+            storage_detail: self.storage_detail.clone(),
         }
     }
 
@@ -135,6 +145,10 @@ impl CameraController {
 
     pub fn update_storage_status(&mut self, message: StorageState) {
         self.storage_status = message;
+    }
+
+    pub fn update_storage_detail(&mut self, detail: StorageDetail) {
+        self.storage_detail = detail;
     }
 
     pub fn update_trigger_status(&mut self, value: bool) {

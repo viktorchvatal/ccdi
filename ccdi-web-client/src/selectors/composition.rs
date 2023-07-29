@@ -57,7 +57,9 @@ impl Component for CompositionDetail {
                         onclick={server_action(CameraParam(EnableLoop(true)))}
                         >{"Loop ON"}
                     </button>
-                    <button onclick={
+                    <button
+                        class={classes!(if loop_enabled { Some("hidden") } else { None })}
+                        onclick={
                         server_action(ExposureMessage(ExposureCommand::Start))
                     }>{"Expose"}</button>
                 </div>

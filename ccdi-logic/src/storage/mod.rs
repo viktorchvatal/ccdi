@@ -1,9 +1,13 @@
-use std::{sync::Arc, process::Command, path::PathBuf};
+use std::{sync::Arc, process::Command, path::{PathBuf, Path}, collections::VecDeque};
 
-use ccdi_common::{StorageMessage, StateMessage, StorageState, StorageDetails, to_string};
-use log::info;
+use ccdi_common::{StorageMessage, StateMessage, StorageState, StorageDetails, to_string, StorageLogRecord, RawImage, StorageLogStatus, StorageDetail};
+use log::{info, debug};
 
 use crate::ServiceConfig;
+
+use self::save::save_fits_file;
+
+mod save;
 
 // ============================================ PUBLIC =============================================
 
@@ -11,8 +15,9 @@ pub struct Storage {
     config: Arc<ServiceConfig>,
     last_storage_state: StorageState,
     counter: usize,
-    storage_name: Option<String>,
+    storage_name: String,
     storage_active: bool,
+    details: VecDeque<StorageLogRecord>,
 }
 
 impl Storage {
@@ -21,36 +26,36 @@ impl Storage {
             config,
             last_storage_state: StorageState::Unknown,
             counter: 0,
-            storage_name: None,
+            storage_name: String::from("default"),
             storage_active: false,
+            details: VecDeque::new(),
         }
     }
 
     pub fn process(&mut self, message: StorageMessage) -> Result<Vec<StateMessage>, String> {
         match message {
             StorageMessage::SetDirectory(name) => {
-                self.storage_name = Some(name);
+                self.storage_name = name;
                 self.counter = 0;
             },
             StorageMessage::DisableStore => {
+                debug!("Storage disabled");
                 self.storage_active = false;
                 self.counter = 0;
             },
             StorageMessage::EnableStore => {
+                debug!("Storage enabled");
                 self.storage_active = true;
                 self.counter = 0;
             },
             StorageMessage::ProcessImage(image) => {
-                if let Some(dir) = self.current_dir() {
-                    if self.storage_active {
-                        info!("Store: Dir: '{dir}' Id: {}", self.counter);
-                        self.counter += 1;
-                    }
+                if self.storage_active {
+                    self.handle_image(image);
                 }
             }
-        };
+        }
 
-        Ok(vec![])
+        Ok(vec![StateMessage::UpdateStorageDetail(self.get_details())])
     }
 
     pub fn periodic_tasks(&mut self) -> Result<Vec<StateMessage>, String> {
@@ -68,15 +73,55 @@ impl Storage {
 // =========================================== PRIVATE =============================================
 
 impl Storage {
+    fn get_details(&self) -> StorageDetail {
+        StorageDetail {
+            storage_name: self.storage_name.clone(),
+            counter: self.counter,
+            storage_log: self.details.iter().cloned().collect(),
+            storage_enabled: self.storage_active,
+        }
+    }
+
     fn current_dir(&self) -> Option<String> {
-        self.storage_name
-            .clone()
-            .and_then(
-                |dir| PathBuf::from(self.config.storage.clone())
-                    .join(PathBuf::from(dir))
-                    .to_str()
-                    .map(|path| path.to_owned())
-            )
+        PathBuf::from(self.config.storage.clone())
+            .join(PathBuf::from(self.storage_name.clone()))
+            .to_str()
+            .map(|path| path.to_owned())
+    }
+
+    fn current_file_name(&self) -> Option<String> {
+        self.current_dir().map(|dir| format!("{}/{:05}.fits", dir, self.counter))
+    }
+
+    fn handle_image(&mut self, image: Arc<RawImage>) {
+        let result = match self.current_file_name() {
+            None => file_name_err(),
+            Some(file_name) => match save_fits_file(&image, &file_name) {
+                Ok(_) => ok_record(file_name),
+                Err(error) => StorageLogRecord {
+                    name: file_name,
+                    status: StorageLogStatus::Error(error)
+                }
+            }
+        };
+
+        self.counter += 1;
+        self.details.push_back(result);
+
+        while self.details.len() > 20 {
+            self.details.pop_front();
+        }
+    }
+}
+
+fn ok_record(name: String) -> StorageLogRecord {
+    StorageLogRecord { name, status: StorageLogStatus::Success }
+}
+
+fn file_name_err() -> StorageLogRecord {
+    StorageLogRecord {
+        name: String::from("Could not assemble file name"),
+        status: StorageLogStatus::Error(String::new())
     }
 }
 

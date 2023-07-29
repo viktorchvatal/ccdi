@@ -50,7 +50,7 @@ impl Component for Menu {
                 {menu_item("Composition", Composition, selected, ctx)}
                 {menu_item("Cooling", Cooling, selected, ctx)}
                 {menu_item("Info", Info, selected, ctx)}
-                {menu_item("Shoot", Shoot, selected, ctx)}
+                {menu_item("Series", Shoot, selected, ctx)}
             </div>
         }
     }

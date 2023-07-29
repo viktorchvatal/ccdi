@@ -5,6 +5,7 @@ mod selectors;
 use std::sync::Arc;
 
 use ccdi_common::*;
+use components::shooting_details::ShootingDetails;
 use connection::ConnectionService;
 use gloo::console;
 
@@ -131,6 +132,7 @@ impl Main {
             <div>
                 <ShootingDetail
                     on_action={action.clone()}
+                    storage_details={self.view_state.storage_detail.clone()}
                 />
 
                 <CompositionDetail
@@ -138,6 +140,17 @@ impl Main {
                     camera_params={self.view_state.camera_params.clone()}
                 />
             </div>
+        }
+    }
+
+    fn render_main(&self) -> Html {
+        match self.selected_menu {
+            MenuItem::Shoot => html!{
+                <ShootingDetails storage_details={self.view_state.storage_detail.clone()} />
+            },
+            _ => html!{
+                <Picture image={self.image.clone()} />
+            }
         }
     }
 }
@@ -217,7 +230,7 @@ impl Component for Main {
                 <Menu clicked={menu_clicked} selected={self.selected_menu} />
                 <div class="main-row">
                     <div class="main-image-column">
-                        <Picture image={self.image.clone()} />
+                        { self.render_main() }
                     </div>
                     <div class="main-tool-column">
                         { self.render_tool(ctx) }

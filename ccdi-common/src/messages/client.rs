@@ -4,7 +4,7 @@ use ccdi_imager_interface::{ImagerProperties, ExposureParams};
 use nanocv::ImgSize;
 use serde_derive::{Serialize, Deserialize};
 
-use crate::{RgbImage, RenderingType, StorageState};
+use crate::{RgbImage, RenderingType, StorageState, StorageDetail};
 
 use super::gui_config::GuiConfig;
 
@@ -29,6 +29,7 @@ pub struct ViewState {
     pub status: LogicStatus,
     pub camera_properties: Option<Arc<ImagerProperties>>,
     pub camera_params: CameraParams,
+    pub storage_detail: StorageDetail,
     pub config: GuiConfig,
 }
 
@@ -39,6 +40,7 @@ impl Default for ViewState {
             status: Default::default(),
             camera_properties: None,
             camera_params: Default::default(),
+            storage_detail: Default::default(),
             config: GuiConfig::default(),
         }
     }
@@ -81,6 +83,9 @@ pub struct LogicStatus {
     pub exposure: ConnectionState,
     pub storage: StorageState,
     pub trigger: ConnectionState,
+    pub required: ConnectionState,
+    pub loop_enabled: ConnectionState,
+    pub save: ConnectionState,
 }
 
 impl Default for LogicStatus {
@@ -89,7 +94,10 @@ impl Default for LogicStatus {
             camera: ConnectionState::Disconnected,
             exposure: ConnectionState::Disconnected,
             trigger: ConnectionState::Disconnected,
+            required: ConnectionState::Disconnected,
             storage: StorageState::Unknown,
+            save: ConnectionState::Disconnected,
+            loop_enabled: ConnectionState::Disconnected,
         }
     }
 }

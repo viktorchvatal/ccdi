@@ -74,6 +74,10 @@ impl BackendState {
                     storage_messages: vec![message],
                 }
             },
+            UpdateStorageDetail(detail) => {
+                self.camera.update_storage_detail(detail);
+                self.return_view()
+            },
         })
     }
 
