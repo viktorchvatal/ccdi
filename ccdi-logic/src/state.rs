@@ -66,12 +66,15 @@ impl BackendState {
             },
             TriggerValueChanged(value) => {
                 self.camera.update_trigger_status(value);
-                BackendResult::empty()
+                // Trigger might be switched on, perform idle tasks immediately
+                let (client, io) = self.camera.periodic();
+                BackendResult::client_io(client, io)
             },
             StorageMessage(message) => {
                 BackendResult {
-                    client_messages: vec![],
+                    client_messages: Vec::new(),
                     storage_messages: vec![message],
+                    io_messages: Vec::new(),
                 }
             },
             UpdateStorageDetail(detail) => {
@@ -82,25 +85,43 @@ impl BackendState {
     }
 
     /// Called periodically to perform any tasks needed and return messages for clients
-    pub fn periodic(&mut self) -> Result<(Vec<ClientMessage>, Vec<IoMessage>), String> {
-        Ok(self.camera.periodic())
+    pub fn periodic(&mut self) -> Result<BackendResult, String> {
+        let (client, io) = self.camera.periodic();
+        Ok(BackendResult::client_io(client, io))
     }
 }
 
 pub struct BackendResult {
     pub client_messages: Vec<ClientMessage>,
     pub storage_messages: Vec<StorageMessage>,
+    pub io_messages: Vec<IoMessage>,
 }
 
 impl BackendResult {
     pub fn empty() -> Self {
-        BackendResult { client_messages: vec![], storage_messages: vec![] }
+        BackendResult {
+            client_messages: Vec::new(),
+            storage_messages: Vec::new(),
+            io_messages: Vec::new(),
+        }
     }
 
     pub fn client(client_messages: Vec<ClientMessage>) -> Self {
         Self {
             client_messages,
-            storage_messages: vec![],
+            storage_messages: Vec::new(),
+            io_messages: Vec::new(),
+        }
+    }
+
+    pub fn client_io(
+        client: Vec<ClientMessage>,
+        io: Vec<IoMessage>,
+    ) -> Self {
+        Self {
+            client_messages: client,
+            io_messages: io,
+            storage_messages: Vec::new(),
         }
     }
 }
@@ -111,7 +132,8 @@ impl BackendState {
     fn return_view(&self) -> BackendResult {
         BackendResult {
             client_messages: vec![ClientMessage::View(self.camera.get_view())],
-            storage_messages: vec![]
+            storage_messages: Vec::new(),
+            io_messages: Vec::new(),
         }
     }
 }

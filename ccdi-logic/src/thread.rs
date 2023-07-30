@@ -35,12 +35,14 @@ pub fn start_logic_thread(
             loop {
                 match server_rx.recv_timeout(Duration::from_millis(50)) {
                     // Process the received message
-                    Ok(message) => receive_message(&mut state, message, &clients_tx, &storage_tx),
+                    Ok(message) => receive_message(
+                        &mut state, message, &clients_tx, &storage_tx, &io_tx
+                    ),
                     // Last sender disconnected - exit thread
                     Err(RecvTimeoutError::Disconnected) => return,
                     // No messages received within timeout - perform periodic tasks
                     Err(RecvTimeoutError::Timeout) => periodic_tasks(
-                        &mut state, &clients_tx, &io_tx
+                        &mut state, &clients_tx, &storage_tx, &io_tx
                     ),
                 }
             }
@@ -161,21 +163,25 @@ fn receive_message(
     message: StateMessage,
     clients_tx: &Sender<ClientMessage>,
     storage_tx: &Sender<StorageMessage>,
+    io_tx: &Sender<IoMessage>,
 ) {
     if let Some(responses) = log_err("Process state message", state.process(message)) {
         send_client_messages(responses.client_messages, clients_tx);
         send_storage_messages(responses.storage_messages, storage_tx);
+        send_io_messages(responses.io_messages, io_tx);
     }
 }
 
 fn periodic_tasks(
     state: &mut BackendState,
     clients_tx: &Sender<ClientMessage>,
+    storage_tx: &Sender<StorageMessage>,
     io_tx: &Sender<IoMessage>,
 ) {
-    if let Some((client, io)) = log_err("Perform periodic tasks", state.periodic()) {
-        send_client_messages(client, clients_tx);
-        send_io_messages(io, io_tx);
+    if let Some(responses) = log_err("Perform periodic tasks", state.periodic()) {
+        send_client_messages(responses.client_messages, clients_tx);
+        send_storage_messages(responses.storage_messages, storage_tx);
+        send_io_messages(responses.io_messages, io_tx);
     }
 }
 
