@@ -118,7 +118,7 @@ fn generate_test_image(width: usize, height: usize) -> Vec<u16> {
 
 const XMIN: f64 = 0.27085;
 const XMAX: f64 = 0.27100;
-const YMIN: f64 = 0.004560;
+const YMIN: f64 = 0.004570;
 const YMAX: f64 = 0.004755;
 const MAX_ITER: usize = 500;
 
