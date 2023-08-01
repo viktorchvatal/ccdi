@@ -1,4 +1,4 @@
-use std::{fmt::Debug};
+use std::{fmt::Debug, cmp::min};
 
 use ccdi_imager_interface::{
     ImagerDriver, ImagerDevice, ImagerProperties, DeviceDescriptor, DeviceProperty, BasicProperties, ExposureParams, TemperatureRequest
@@ -38,8 +38,8 @@ impl ImagerDevice for DemoImagerDevice {
         self.offset += 0.001;
         Ok(ImagerProperties {
             basic: BasicProperties {
-                width: 3000,
-                height: 2000,
+                width: 6000,
+                height: 4000,
                 temperature: self.temperature
             },
             other: list_demo_properties(&self)
@@ -59,11 +59,7 @@ impl ImagerDevice for DemoImagerDevice {
     }
 
     fn download_image(&mut self, params: &ExposureParams) -> Result<Vec<u16>, String> {
-        Ok(
-            (0..(params.area.pixel_count()))
-                .map(|x| ((x/30) % 12000) as u16*100)
-                .collect()
-        )
+        Ok(generate_test_image(params.area.width, params.area.height))
     }
 
     fn set_temperature(&mut self, request: TemperatureRequest) -> Result<(), String> {
@@ -96,4 +92,54 @@ fn prop<T: Debug>(name: &str, value: T) -> DeviceProperty {
         name: name.to_owned(),
         value: format!("{:?}", value)
     }
+}
+
+fn generate_test_image(width: usize, height: usize) -> Vec<u16> {
+    let mut buffer = vec![0u16; width*height];
+    let len = buffer.len();
+
+    let dx = (XMAX - XMIN)/width as f64;
+    let dy = (YMAX - YMIN)/height as f64;
+
+    for y in 0..(height/2) {
+        let lines = &mut buffer[y*width*2 .. min(len, (y+2)*width*2)];
+
+        for x in 0..(width/2) {
+            let (a, b, c) = generate_pixel(x, y, dx, dy);
+            lines[x*2] = b;
+            lines[x*2 + 1] = a;
+            lines[width + x*2] = c;
+            lines[width + x*2 + 1] = b;
+        }
+    }
+
+    buffer
+}
+
+const XMIN: f64 = 0.27085;
+const XMAX: f64 = 0.27100;
+const YMIN: f64 = 0.004560;
+const YMAX: f64 = 0.004755;
+const MAX_ITER: usize = 500;
+
+fn generate_pixel(x: usize, y: usize, dx: f64, dy: f64) -> (u16, u16, u16) {
+    let mut u: f64 = 0.0;
+    let mut v: f64 = 0.0;
+    let mut u2: f64 = u*u;
+    let mut v2: f64 = v*v;
+    let ry = YMAX - y as f64*dy;
+    let rx = XMIN + x as f64 * dx;
+    /* iterate the point */
+    let mut k = 1;
+
+    while k < MAX_ITER && (u2 + v2 < 4.0) {
+        v = 2.0*u*v + ry;
+        u = u2 - v2 + rx;
+        u2 = u*u;
+        v2 = v*v;
+        k += 1;
+    }
+
+    let out = ((k as f64 - 50.0)*100.0).clamp(0.0, 65535.0) as u16;
+    (600*(out % 57), out*2, 2000*(out % 17))
 }
