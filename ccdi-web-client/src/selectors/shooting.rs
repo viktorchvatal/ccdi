@@ -1,8 +1,4 @@
-use ccdi_common::ExposureCommand;
-use serde::__private::de;
-use wasm_bindgen::{UnwrapThrowExt, JsCast};
-use web_sys::{HtmlInputElement, Event};
-use yew::{Properties, Callback, use_state, InputEvent};
+use yew::{Properties, Callback};
 use crate::components::text_input::TextInput;
 
 use super::*;

@@ -1,7 +1,7 @@
 use std::{io::Cursor, cmp::{min, max}};
 
-use ccdi_common::{RgbImage};
-use image::{DynamicImage};
+use ccdi_common::RgbImage;
+use image::DynamicImage;
 
 // ============================================ PUBLIC =============================================
 

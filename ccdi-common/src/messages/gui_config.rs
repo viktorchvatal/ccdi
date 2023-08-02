@@ -1,5 +1,5 @@
 use serde_derive::{Serialize, Deserialize};
-use serde::{Serializer};
+use serde::Serializer;
 
 // ============================================ PUBLIC =============================================
 

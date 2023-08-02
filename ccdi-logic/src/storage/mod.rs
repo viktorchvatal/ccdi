@@ -1,7 +1,10 @@
-use std::{sync::Arc, process::Command, path::{PathBuf, Path}, collections::VecDeque};
+use std::{sync::Arc, process::Command, path::PathBuf, collections::VecDeque};
 
-use ccdi_common::{StorageMessage, StateMessage, StorageState, StorageCapacity, to_string, StorageLogRecord, RawImage, StorageLogStatus, StorageDetail};
-use log::{info, debug};
+use ccdi_common::{
+    StorageMessage, StateMessage, StorageState, StorageCapacity, to_string, StorageLogRecord,
+    RawImage, StorageLogStatus, StorageDetail
+};
+use log::debug;
 
 use crate::ServiceConfig;
 

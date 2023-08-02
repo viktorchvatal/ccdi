@@ -1,6 +1,6 @@
-use std::{cmp::{min, max}};
+use std::cmp::{min, max};
 
-use ccdi_common::{RgbImage};
+use ccdi_common::RgbImage;
 use nanocv::Img;
 
 // ============================================ PUBLIC =============================================

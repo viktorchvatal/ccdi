@@ -9,12 +9,11 @@ use ccdi_common::{
     CameraParams, CameraParamMessage, StorageState, StorageMessage, IoMessage, StorageDetail
 };
 use ccdi_imager_interface::{ImagerDriver, DeviceDescriptor};
-use log::{info};
-use serde::__private::de;
+use log::info;
 
-use crate::{ServiceConfig};
+use crate::ServiceConfig;
 
-use self::{connected::ConnectedCameraController};
+use self::connected::ConnectedCameraController;
 
 // ============================================ PUBLIC =============================================
 

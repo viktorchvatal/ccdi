@@ -1,9 +1,11 @@
 use std::sync::{Arc, mpsc::Sender};
 
-use ccdi_common::{ExposureCommand, ClientMessage, ConnectionState, ProcessMessage, CameraParams, StorageMessage};
+use ccdi_common::{
+    ExposureCommand, ClientMessage, ConnectionState, ProcessMessage, CameraParams, StorageMessage
+};
 use ccdi_imager_interface::{ImagerDevice, ImagerProperties, TemperatureRequest};
 
-use super::{properties::{PropertiesController}, exposure::ExposureController};
+use super::{properties::PropertiesController, exposure::ExposureController};
 
 // ============================================ PUBLIC =============================================
 

@@ -1,9 +1,9 @@
-use std::{sync::Arc, path::{PathBuf, Path}};
+use std::path::{PathBuf, Path};
 
 use ccdi_common::{IoMessage, StateMessage, read_text_file, save_text_file};
 use log::debug;
 
-use crate::{ServiceConfig, IoConfig};
+use crate::IoConfig;
 
 // ============================================ PUBLIC =============================================
 
