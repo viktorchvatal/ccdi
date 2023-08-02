@@ -5,15 +5,17 @@ use serde::{Serializer};
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct GuiConfig {
-    pub temperature: ButtonSet<f32>,
+    pub cooling: ButtonSet<f64>,
+    pub heating: ButtonSet<f64>,
     pub exposure: ButtonSet<f64>,
-    pub gain: ButtonSet<u16>,
+    pub gain: ButtonSet<f64>,
 }
 
 impl Default for GuiConfig {
     fn default() -> Self {
         Self {
-            temperature: default_temperature_buttons(),
+            cooling: default_temperature_buttons(),
+            heating: default_temperature_buttons(),
             exposure: ButtonSet { buttons: vec![] },
             gain: ButtonSet { buttons: vec![] },
         }
@@ -58,7 +60,7 @@ fn bt<T>(name: &str, value: T) -> Button<T> {
     }
 }
 
-fn default_temperature_buttons() -> ButtonSet<f32> {
+fn default_temperature_buttons() -> ButtonSet<f64> {
     ButtonSet {
         buttons: vec![
             vec![

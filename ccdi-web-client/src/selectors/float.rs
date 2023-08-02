@@ -3,22 +3,23 @@ use super::*;
 
 // ============================================ PUBLIC =============================================
 
-pub struct TimeSelector;
+pub struct FloatSelector;
 
 pub enum Msg {
-    SetTime(f64),
+    SetValue(f64),
 }
 
 #[derive(Clone, PartialEq, Properties)]
-pub struct TimeData {
-    pub time_changed: Callback<f64>,
-    pub selected_time: f64,
+pub struct SelectorData {
+    pub name: &'static str,
+    pub value_changed: Callback<f64>,
+    pub selected_value: f64,
     pub config: ButtonSet<f64>,
 }
 
-impl Component for TimeSelector {
+impl Component for FloatSelector {
     type Message = Msg;
-    type Properties = TimeData;
+    type Properties = SelectorData;
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self { }
@@ -26,20 +27,20 @@ impl Component for TimeSelector {
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Msg::SetTime(value) => {
-                ctx.props().time_changed.emit(value)
+            Msg::SetValue(value) => {
+                ctx.props().value_changed.emit(value)
             },
         }
         true
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let selected = ctx.props().selected_time;
+        let selected = ctx.props().selected_value;
         let buttons = &ctx.props().config;
 
         html! {
             <div>
-                <p>{"Set camera exposure time"}</p>
+                <p>{&ctx.props().name}</p>
                 {render_buttons(buttons, selected, ctx)}
             </div>
         }
@@ -51,7 +52,7 @@ impl Component for TimeSelector {
 fn render_buttons(
     button_set: &ButtonSet<f64>,
     current: f64,
-    ctx: &Context<TimeSelector>
+    ctx: &Context<FloatSelector>
 ) -> Html {
     button_set.buttons.iter()
         .map(|row| render_row(row.as_slice(), current, ctx))
@@ -61,10 +62,10 @@ fn render_buttons(
 fn render_row(
     row: &[Button<f64>],
     current: f64,
-    ctx: &Context<TimeSelector>
+    ctx: &Context<FloatSelector>
 ) -> Html {
     let row_items = row.iter()
-        .map(|button| time_button(current, button.value, button.text.as_str(), ctx))
+        .map(|button| cooling_button(current, button.value, button.text.as_str(), ctx))
         .collect::<Html>();
 
     html!{
@@ -72,13 +73,13 @@ fn render_row(
     }
 }
 
-fn time_button(
+fn cooling_button(
     current: f64,
     value: f64,
     text: &str,
-    ctx: &Context<TimeSelector>
+    ctx: &Context<FloatSelector>
 ) -> Html {
-    let time_click = |action: f64| ctx.link().callback(move |_| Msg::SetTime(action));
+    let time_click = |action: f64| ctx.link().callback(move |_| Msg::SetValue(action));
 
     let selected_class = match value == current {
         true => Some("button-selected"),
@@ -93,3 +94,4 @@ fn time_button(
         </button>
     }
 }
+

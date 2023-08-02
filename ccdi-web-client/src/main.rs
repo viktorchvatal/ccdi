@@ -18,11 +18,9 @@ use components::menu::{Menu, MenuItem};
 use components::status_bar::StatusBar;
 use selectors::composition::CompositionDetail;
 use selectors::picture::Picture;
-use selectors::time::TimeSelector;
-use selectors::gain::GainSelector;
-use selectors::cooling::CoolingSelector;
 use selectors::rendering::RenderingSelector;
 
+use crate::selectors::float::FloatSelector;
 use crate::selectors::shooting::ShootingDetail;
 
 // ============================================ PUBLIC =============================================
@@ -75,7 +73,7 @@ impl Main {
             .callback(|action: StateMessage| Msg::SendMessage(action));
 
         let gain_changed = ctx.link().callback(
-            |gain: u16| Msg::ParamUpdate(CameraParamMessage::SetGain(gain))
+            |gain: f64| Msg::ParamUpdate(CameraParamMessage::SetGain(gain as u16))
         );
 
         let time_changed = ctx.link().callback(
@@ -88,15 +86,17 @@ impl Main {
 
         html!{
             <div>
-                <GainSelector
+                <FloatSelector
+                    name="Set camera gain"
                     config={self.view_state.config.gain.clone()}
-                    gain_changed={gain_changed}
-                    selected_gain={self.view_state.camera_params.gain}
+                    selected_value={self.view_state.camera_params.gain as f64}
+                    value_changed={gain_changed}
                 />
-                <TimeSelector
+                <FloatSelector
+                    name="Set camera exposure time"
                     config={self.view_state.config.exposure.clone()}
-                    time_changed={time_changed}
-                    selected_time={self.view_state.camera_params.time}
+                    selected_value={self.view_state.camera_params.time}
+                    value_changed={time_changed}
                 />
                 <RenderingSelector
                     rendering_changed={rendering_changed}
@@ -111,16 +111,29 @@ impl Main {
     }
 
     fn render_cooling(&self, ctx: &Context<Self>) -> Html {
-        let temperature_changed = ctx.link().callback(
-            |temp: f32| Msg::ParamUpdate(CameraParamMessage::SetTemp(temp))
+        let cooling_changed = ctx.link().callback(
+            |temp: f64| Msg::ParamUpdate(CameraParamMessage::SetTemp(temp))
+        );
+
+        let heating_changed = ctx.link().callback(
+            |temp: f64| Msg::ParamUpdate(CameraParamMessage::SetHeatingPwm(temp))
         );
 
         html!{
-            <CoolingSelector
-                config={self.view_state.config.temperature.clone()}
-                selected_temp={self.view_state.camera_params.temperature}
-                temp_changed={temperature_changed}
-            />
+            <div>
+                <FloatSelector
+                    name="Camera Cooling"
+                    config={self.view_state.config.cooling.clone()}
+                    selected_value={self.view_state.camera_params.temperature}
+                    value_changed={cooling_changed}
+                />
+                <FloatSelector
+                    name="Telescope Heating PWM"
+                    config={self.view_state.config.heating.clone()}
+                    selected_value={self.view_state.camera_params.heating_pwm}
+                    value_changed={heating_changed}
+                />
+            </div>
         }
     }
 

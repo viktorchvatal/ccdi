@@ -12,7 +12,7 @@ pub struct ConnectedCameraController {
     properties: PropertiesController,
     exposure: ExposureController,
     messages: Vec<ClientMessage>,
-    last_temperature_set: Option<f32>,
+    last_temperature_set: Option<f64>,
 }
 
 impl ConnectedCameraController {
@@ -35,12 +35,12 @@ impl ConnectedCameraController {
         self.device.close()
     }
 
-    pub fn periodic(&mut self, temperature: f32) -> Result<(), String> {
+    pub fn periodic(&mut self, temperature: f64) -> Result<(), String> {
         self.messages.append(&mut self.exposure.periodic(self.device.as_mut())?);
 
         if self.last_temperature_set != Some(temperature) {
             self.device.set_temperature(
-                TemperatureRequest { temperature, speed: 3.0 }
+                TemperatureRequest { temperature: temperature as f32, speed: 3.0 }
             )?;
             self.last_temperature_set = Some(temperature);
         }

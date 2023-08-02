@@ -48,7 +48,7 @@ impl Component for Menu {
         html! {
             <div>
                 {menu_item("Composition", Composition, selected, ctx)}
-                {menu_item("Cooling", Cooling, selected, ctx)}
+                {menu_item("Temperature", Cooling, selected, ctx)}
                 {menu_item("Info", Info, selected, ctx)}
                 {menu_item("Series", Shoot, selected, ctx)}
             </div>

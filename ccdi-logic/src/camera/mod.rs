@@ -121,6 +121,7 @@ impl CameraController {
             EnableLoop(value) => self.camera_params.loop_enabled = value,
             SetGain(gain) => self.camera_params.gain = gain,
             SetTemp(temp) => self.camera_params.temperature = temp,
+            SetHeatingPwm(temp) => self.camera_params.heating_pwm = temp,
             SetTime(time) => self.camera_params.time = time,
             SetRenderingType(rendering) => self.camera_params.rendering = rendering,
             SetTriggerRequired(value) => self.camera_params.trigger_required = value,

@@ -105,11 +105,11 @@ fn generate_test_image(width: usize, height: usize) -> Vec<u16> {
         let lines = &mut buffer[y*width*2 .. min(len, (y+2)*width*2)];
 
         for x in 0..(width/2) {
-            let (a, b, c) = generate_pixel(x, y, dx, dy);
-            lines[x*2] = b;
-            lines[x*2 + 1] = a;
-            lines[width + x*2] = c;
-            lines[width + x*2 + 1] = b;
+            let (r, g, b) = generate_pixel(x, y, dx, dy);
+            lines[x*2] = g;
+            lines[x*2 + 1] = r;
+            lines[width + x*2] = b;
+            lines[width + x*2 + 1] = g;
         }
     }
 
@@ -125,11 +125,13 @@ const MAX_ITER: usize = 500;
 fn generate_pixel(x: usize, y: usize, dx: f64, dy: f64) -> (u16, u16, u16) {
     let mut u: f64 = 0.0;
     let mut v: f64 = 0.0;
+
     let mut u2: f64 = u*u;
     let mut v2: f64 = v*v;
+
     let ry = YMAX - y as f64*dy;
-    let rx = XMIN + x as f64 * dx;
-    /* iterate the point */
+    let rx = XMIN + x as f64*dx;
+
     let mut k = 1;
 
     while k < MAX_ITER && (u2 + v2 < 4.0) {
