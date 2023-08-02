@@ -66,7 +66,7 @@ impl CameraParams {
             time: 1.0,
             rendering: RenderingType::FullImage,
             render_size,
-            temperature: 20.0,
+            temperature: 25.0,
             trigger_required: false,
             heating_pwm: 0.0,
         }
