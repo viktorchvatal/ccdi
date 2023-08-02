@@ -1,4 +1,4 @@
-use std::{os::raw::c_char, ffi::{CStr}};
+use std::{os::raw::c_char, ffi::CStr};
 use super::*;
 
 pub fn enumerate_read_modes(camera_ptr: *mut camera_t) -> Result<Vec<String>, CameraError> {
@@ -16,7 +16,7 @@ pub fn enumerate_read_modes(camera_ptr: *mut camera_t) -> Result<Vec<String>, Ca
                 camera_ptr,
                 index,
                 buffer.as_mut_ptr(),
-                to_length(buffer.len())
+                buffer.len()
             )
         };
 

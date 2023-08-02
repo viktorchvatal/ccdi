@@ -5,5 +5,5 @@ authors = ["vchvatal"]
 edition = "2021"
 
 [build-dependencies]
-bindgen = "0.53.1"
+bindgen = "0.66.1"
 cc = "1.0.73"

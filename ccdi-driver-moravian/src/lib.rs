@@ -79,7 +79,7 @@ impl CameraDriver {
 
         let result = unsafe {
             gxccd_read_image(
-                self.camera_ptr, buffer.as_mut_ptr() as *mut c_void, to_length(2*buffer.len())
+                self.camera_ptr, buffer.as_mut_ptr() as *mut c_void, 2*buffer.len()
             )
         };
         if result == 0 { Ok(buffer) } else { Err(CameraError::Unspecified) }
@@ -108,14 +108,4 @@ fn convert_simple(result: i32) -> Result<(), CameraError> {
 
 fn convert_result<T>(value: T, result: i32) -> Result<T, CameraError> {
     if result == 0 { Ok(value) } else { Err(CameraError::Unspecified) }
-}
-
-#[cfg(all(target_os = "linux", any(target_arch = "x86_64", target_arch = "aarch64")))]
-fn to_length(length: usize) -> u64 {
-    length as u64
-}
-
-#[cfg(all(target_os = "linux", target_arch = "arm"))]
-fn to_length(length: usize) -> u32 {
-    length as u32
 }
