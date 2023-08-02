@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 log = "0.4.17"
-directories = "4.0.1"
+directories = "5.0.1"
 serde = { version = "1", features = ["rc"] }
 serde_json = "1"
 serde_derive = "1"
@@ -21,4 +21,4 @@ ccdi-imager-moravian = { path = "../ccdi-imager-moravian" }
 
 
 [dev-dependencies]
-indoc = "1.0.6"
+indoc = "2.0.3"
