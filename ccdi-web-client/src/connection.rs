@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use anyhow::Error;
 use yew::{html, Component, Context, Html, Callback, Properties};
-use yew_websocket::{websocket::{WebSocketService, WebSocketStatus, WebSocketTask}};
+use yew_websocket::websocket::{WebSocketService, WebSocketStatus, WebSocketTask};
 use ccdi_common::{ClientMessage, StateMessage, ConnectionState, rgb_image_from_bytes, to_string};
 use gloo::console;
 use gloo::timers::callback::Interval;

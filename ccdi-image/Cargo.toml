@@ -4,11 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-log = "0.4.17"
-plotters = "0.3.5"
+
 ccdi-common = { path = "../ccdi-common" }
 
 nanocv = { git = "https://github.com/viktorchvatal/nanocv.git", features = ["serde"] }
+
+[dependencies.plotters]
+version = "0.3.5"
+default-features = false
+features = ["bitmap_backend", "line_series"]
 
 [dependencies.image]
 version = "0.24.6"
