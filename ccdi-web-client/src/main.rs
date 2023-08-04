@@ -162,7 +162,11 @@ impl Main {
                 <ShootingDetails storage_details={self.view_state.storage_detail.clone()} />
             },
             _ => html!{
-                <Picture image={self.image.clone()} />
+                <Picture
+                    image={self.image.clone()}
+                    hist_width={self.view_state.config.histogram_width}
+                    hist_height={self.view_state.config.histogram_height}
+                />
             }
         }
     }

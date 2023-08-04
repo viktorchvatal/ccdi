@@ -3,6 +3,8 @@ render_size:
   x: 900
   y: 600
 gui:
+  histogram_width: 512
+  histogram_height: 100
   cooling:
     buttons:
     - [['-20', -20], ['-15', -15], ['-10', -10], ['-5', -5]]

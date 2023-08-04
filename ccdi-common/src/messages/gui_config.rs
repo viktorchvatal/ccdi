@@ -9,6 +9,8 @@ pub struct GuiConfig {
     pub heating: ButtonSet<f64>,
     pub exposure: ButtonSet<f64>,
     pub gain: ButtonSet<f64>,
+    pub histogram_width: usize,
+    pub histogram_height: usize,
 }
 
 impl Default for GuiConfig {
@@ -18,6 +20,8 @@ impl Default for GuiConfig {
             heating: default_temperature_buttons(),
             exposure: ButtonSet { buttons: vec![] },
             gain: ButtonSet { buttons: vec![] },
+            histogram_width: 512,
+            histogram_height: 100,
         }
     }
 }

@@ -2,8 +2,12 @@ use std::sync::Arc;
 
 use base64::{engine::general_purpose::STANDARD, Engine};
 use ccdi_common::RgbImage;
-use ccdi_image::{Transform, TransformFunction, rgb_image_to_bmp, compute_image_stats, ImageStats, render_histogram_as_bmp};
+use ccdi_image::{
+    Transform, TransformFunction, rgb_image_to_bmp, compute_image_stats, ImageStats,
+    render_histogram_as_bmp
+};
 use yew::Properties;
+
 use super::*;
 
 // ============================================ PUBLIC =============================================
@@ -21,6 +25,8 @@ pub struct Picture {
 #[derive(Clone, PartialEq, Properties)]
 pub struct PictureData {
     pub image: Option<Arc<RgbImage<u16>>>,
+    pub hist_width: usize,
+    pub hist_height: usize,
 }
 
 impl Component for Picture {
@@ -49,7 +55,9 @@ impl Component for Picture {
             sub: 500
         };
 
-        let stats = ctx.props().image.as_deref().map(|img| compute_image_stats(img, 512));
+        let hist_w = ctx.props().hist_width;
+        let hist_h = ctx.props().hist_height;
+        let stats = ctx.props().image.as_deref().map(|img| compute_image_stats(img, hist_w));
 
         html! {
             <div>
@@ -72,7 +80,7 @@ impl Component for Picture {
                     </div>
                     <div class="image-content">
                         {rgb_image_to_html(ctx.props().image.as_deref(), transform)}
-                        {histogram_table(stats.as_ref())}
+                        {histogram_table(stats.as_ref(), hist_h)}
                     </div>
                 </div>
             </div>
@@ -129,7 +137,7 @@ fn rgb_image_to_html(image: Option<&RgbImage<u16>>, transform: Transform) -> Htm
     }
 }
 
-fn histogram_table(stats: Option<&ImageStats>) -> Html {
+fn histogram_table(stats: Option<&ImageStats>, height: usize) -> Html {
     match stats {
         None => html! {},
         Some(stats) => html! {
@@ -139,7 +147,7 @@ fn histogram_table(stats: Option<&ImageStats>) -> Html {
                         {limits(stats.total.min, stats.r.min, stats.g.min, stats.b.min)}
                     </div>
                     <div class="hist-table-col">
-                        {histogram_image(stats)}
+                        {histogram_image(stats, height)}
                     </div>
                     <div class="hist-table-col">
                         {limits(stats.total.max, stats.r.max, stats.g.max, stats.b.max)}
@@ -150,8 +158,8 @@ fn histogram_table(stats: Option<&ImageStats>) -> Html {
     }
 }
 
-fn histogram_image(stats: &ImageStats) -> Html {
-    let payload = render_histogram_as_bmp(stats).map(|data| STANDARD.encode(&data));
+fn histogram_image(stats: &ImageStats, height: usize) -> Html {
+    let payload = render_histogram_as_bmp(stats, height).map(|data| STANDARD.encode(&data));
 
     match payload {
         Err(error) => html! { <p>{"Histogram err:"} {error}</p> },
@@ -171,7 +179,7 @@ fn limits(all: u16, r: u16, g: u16, b: u16) -> Html {
     html!{
         <>
             <div>{all}</div>
-            <div>{" "}</div>
+            <hr/>
             <div class="red">{r}</div>
             <div class="green">{g}</div>
             <div class="blue">{b}</div>

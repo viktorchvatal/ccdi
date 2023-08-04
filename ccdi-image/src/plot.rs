@@ -7,8 +7,8 @@ use crate::ImageStats;
 
 // ============================================ PUBLIC =============================================
 
-pub fn render_histogram_as_bmp(stats: &ImageStats) -> Result<Vec<u8>, String> {
-    let (width, height) = (stats.r.bins.len(), 100);
+pub fn render_histogram_as_bmp(stats: &ImageStats, height: usize) -> Result<Vec<u8>, String> {
+    let (width, height) = (stats.r.bins.len(), height);
     let mut buffer = vec![0; width*height*3];
     render_plot_to_buffer(&mut buffer, width, height, stats)?;
     save_buffer_as_bmp(&buffer, width, height)
