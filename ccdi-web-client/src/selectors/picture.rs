@@ -72,11 +72,8 @@ impl Component for Picture {
                     </div>
                     <div class="image-content">
                         {rgb_image_to_html(ctx.props().image.as_deref(), transform)}
+                        {histogram_table(stats.as_ref())}
                     </div>
-                </div>
-                <div>
-                    {render_stats(stats.as_ref())}
-                    {histogram_image(stats.as_ref())}
                 </div>
             </div>
         }
@@ -132,11 +129,29 @@ fn rgb_image_to_html(image: Option<&RgbImage<u16>>, transform: Transform) -> Htm
     }
 }
 
-fn histogram_image(stats: Option<&ImageStats>) -> Html {
-    let payload = stats
-        .ok_or(String::from("No stats present"))
-        .and_then(|stats| render_histogram_as_bmp(stats))
-        .map(|data| STANDARD.encode(&data));
+fn histogram_table(stats: Option<&ImageStats>) -> Html {
+    match stats {
+        None => html! {},
+        Some(stats) => html! {
+            <div class="hist-table">
+                <div class="div-table-row">
+                    <div class="hist-table-col">
+                        {limits(stats.total.min, stats.r.min, stats.g.min, stats.b.min)}
+                    </div>
+                    <div class="hist-table-col">
+                        {histogram_image(stats)}
+                    </div>
+                    <div class="hist-table-col">
+                        {limits(stats.total.max, stats.r.max, stats.g.max, stats.b.max)}
+                    </div>
+                </div>
+            </div>
+        }
+    }
+}
+
+fn histogram_image(stats: &ImageStats) -> Html {
+    let payload = render_histogram_as_bmp(stats).map(|data| STANDARD.encode(&data));
 
     match payload {
         Err(error) => html! { <p>{"Histogram err:"} {error}</p> },
@@ -152,19 +167,14 @@ fn rgb_to_jpeg_base64(image: &RgbImage<u16>, transform: Transform) -> Option<Str
     Some(encoded_base64)
 }
 
-fn render_stats(stats: Option<&ImageStats>) -> Html {
-    let stats_text = match stats {
-        None => String::new(),
-        Some(stats) => format!(
-            "All: [{}–{}] R: [{}–{}] G: [{}–{}] B: [{}–{}]",
-            stats.total.min, stats.total.max,
-            stats.r.min, stats.r.max,
-            stats.g.min, stats.g.max,
-            stats.b.min, stats.b.max,
-        )
-    };
-
+fn limits(all: u16, r: u16, g: u16, b: u16) -> Html {
     html!{
-        <div>{stats_text}</div>
+        <>
+            <div>{all}</div>
+            <div>{" "}</div>
+            <div class="red">{r}</div>
+            <div class="green">{g}</div>
+            <div class="blue">{b}</div>
+        </>
     }
 }

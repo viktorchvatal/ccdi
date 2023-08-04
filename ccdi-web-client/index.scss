@@ -118,6 +118,17 @@ footer {
   background-color: #333333;
   padding: 2px;
 }
+.hist-table {
+  display: table;
+  width: auto;
+}
+.hist-table-col {
+  background-color: black;
+  float: left;
+  display: table-cell;
+  width: auto;
+  padding: 2px;
+}
 .w100p {
   width: 100%;
 }
@@ -161,4 +172,13 @@ footer {
 }
 .gray-border {
   border: 1px solid gray;
+}
+.red {
+  color: red;
+}
+.green {
+  color: greenyellow;
+}
+.blue {
+  color: #0050FF;
 }
