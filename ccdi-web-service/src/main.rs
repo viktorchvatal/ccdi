@@ -33,7 +33,7 @@ use bridge::start_std_to_tokio_channel_bridge;
 
 fn main() {
     let config: ServiceConfig = argh::from_env();
-    init_logger(config.debug);
+    init_logger(config.debug, config.log.as_ref());
 
     let params = LogicParams {
         demo_mode: config.demo,

@@ -9,7 +9,11 @@ pub struct ServiceConfig {
     #[argh(switch)]
     pub demo: bool,
 
-    /// enagle debug logging
+    /// enable debug logging
     #[argh(switch)]
     pub debug: bool,
+
+    /// log file
+    #[argh(option)]
+    pub log: Option<String>,
 }
