@@ -19,7 +19,7 @@ pub enum TransformFunction {
     Log2,
 }
 
-pub fn rgb_image_to_jpeg(image: &RgbImage<u16>, transform: Transform) -> Result<Vec<u8>, String> {
+pub fn rgb_image_to_bmp(image: &RgbImage<u16>, transform: Transform) -> Result<Vec<u8>, String> {
     let mut dynamic = DynamicImage::new_rgb8(image.width() as u32, image.height() as u32);
 
     if let Some(ref mut gray) = dynamic.as_mut_rgb8() {
@@ -44,7 +44,7 @@ pub fn rgb_image_to_jpeg(image: &RgbImage<u16>, transform: Transform) -> Result<
 fn save_dynamic_image_to_jpeg(image: &mut DynamicImage) -> Result<Vec<u8>, String> {
     let mut cursor = Cursor::new(Vec::<u8>::new());
 
-    match image.write_to(&mut cursor, image::ImageOutputFormat::Jpeg(95)) {
+    match image.write_to(&mut cursor, image::ImageOutputFormat::Bmp) {
         Ok(_) => Ok(cursor.into_inner()),
         Err(err) => Err(format!("{:?}", err))
     }

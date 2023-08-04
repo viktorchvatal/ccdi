@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use base64::{engine::general_purpose::STANDARD, Engine};
 use ccdi_common::RgbImage;
-use ccdi_image::{Transform, TransformFunction, rgb_image_to_jpeg, compute_image_stats, ImageStats};
+use ccdi_image::{Transform, TransformFunction, rgb_image_to_bmp, compute_image_stats, ImageStats, render_histogram_as_bmp};
 use yew::Properties;
 use super::*;
 
@@ -49,6 +49,8 @@ impl Component for Picture {
             sub: 500
         };
 
+        let stats = ctx.props().image.as_deref().map(|img| compute_image_stats(img, 512));
+
         html! {
             <div>
                 <div class="image-main">
@@ -73,8 +75,8 @@ impl Component for Picture {
                     </div>
                 </div>
                 <div>
-                    {render_stats(ctx.props().image.as_deref().map(|img| compute_image_stats(img)))
-                    }
+                    {render_stats(stats.as_ref())}
+                    {histogram_image(stats.as_ref())}
                 </div>
             </div>
         }
@@ -125,18 +127,32 @@ fn rgb_image_to_html(image: Option<&RgbImage<u16>>, transform: Transform) -> Htm
     match image.and_then(|image| rgb_to_jpeg_base64(image, transform)) {
         None => html! { },
         Some(ref base64) => html! {
-            <img src={format!("data:image/jpeg;base64,{}", base64)} />
+            <img src={format!("data:image/bmp;base64,{}", base64)} />
+        }
+    }
+}
+
+fn histogram_image(stats: Option<&ImageStats>) -> Html {
+    let payload = stats
+        .ok_or(String::from("No stats present"))
+        .and_then(|stats| render_histogram_as_bmp(stats))
+        .map(|data| STANDARD.encode(&data));
+
+    match payload {
+        Err(error) => html! { <p>{"Histogram err:"} {error}</p> },
+        Ok(ref base64) => html! {
+            <img class={"gray-border"} src={format!("data:image/bmp;base64,{}", base64)} />
         }
     }
 }
 
 fn rgb_to_jpeg_base64(image: &RgbImage<u16>, transform: Transform) -> Option<String> {
-    let encoded_jpeg = rgb_image_to_jpeg(image, transform).ok()?;
+    let encoded_jpeg = rgb_image_to_bmp(image, transform).ok()?;
     let encoded_base64 = STANDARD.encode(&encoded_jpeg);
     Some(encoded_base64)
 }
 
-fn render_stats(stats: Option<ImageStats>) -> Html {
+fn render_stats(stats: Option<&ImageStats>) -> Html {
     let stats_text = match stats {
         None => String::new(),
         Some(stats) => format!(

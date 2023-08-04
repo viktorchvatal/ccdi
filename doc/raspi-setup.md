@@ -40,3 +40,8 @@ Graphical:
  - `sudo raspi-config`
  - `interface options`
  - `SSH`
+
+## Configure supervisor
+
+`sudo apt install supervisor`
+

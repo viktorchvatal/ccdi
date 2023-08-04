@@ -17,6 +17,12 @@ Service
  - running on a PC or Raspberry PI
  - allowing standalone batch imaging
 
+## ToDo
+
+ - histograms
+ - computer power off via web app
+ - camera temperature graph
+
 ## Stage of the Project
 
 Working proof of concept - the following image shows CCD camera powered with
