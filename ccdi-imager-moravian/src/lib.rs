@@ -80,7 +80,7 @@ fn read_basic_properties(device: &CameraDriver) -> Result<BasicProperties, Camer
     Ok(BasicProperties{
         width: device.read_chip_width()? as usize,
         height: device.read_chip_height()? as usize,
-        temperature: device.read_camera_temperature()?,
+        temperature: device.read_chip_temperature()?,
     })
 }
 

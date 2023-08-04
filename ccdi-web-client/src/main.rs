@@ -121,6 +121,14 @@ impl Main {
 
         html!{
             <div>
+                <p>{"Chip temperature"}</p>
+                <div>{
+                    self.view_state.camera_properties
+                        .clone()
+                        .map(|prop| prop.basic.temperature.to_string())
+                        .unwrap_or(String::from("?"))
+                    }
+                </div>
                 <FloatSelector
                     name="Camera Cooling"
                     config={self.view_state.config.cooling.clone()}
