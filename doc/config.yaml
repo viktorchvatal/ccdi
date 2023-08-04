@@ -1,4 +1,5 @@
 storage: ~/storage/
+turn_off_command: ""
 render_size:
   x: 900
   y: 600

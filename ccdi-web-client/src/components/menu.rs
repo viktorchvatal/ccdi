@@ -14,6 +14,7 @@ pub enum MenuItem {
     Cooling,
     Info,
     Shoot,
+    System,
 }
 
 pub enum Msg {
@@ -51,6 +52,7 @@ impl Component for Menu {
                 {menu_item("Temperature", Cooling, selected, ctx)}
                 {menu_item("Info", Info, selected, ctx)}
                 {menu_item("Series", Shoot, selected, ctx)}
+                {menu_item("System", System, selected, ctx)}
             </div>
         }
     }

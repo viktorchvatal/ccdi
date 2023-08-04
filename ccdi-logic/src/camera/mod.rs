@@ -1,6 +1,7 @@
 mod properties;
 mod exposure;
 mod connected;
+mod command;
 
 use std::sync::{mpsc::Sender, Arc};
 
@@ -13,7 +14,7 @@ use log::info;
 
 use crate::ServiceConfig;
 
-use self::connected::ConnectedCameraController;
+use self::{connected::ConnectedCameraController, command::execute_command};
 
 // ============================================ PUBLIC =============================================
 
@@ -30,6 +31,7 @@ pub struct CameraController {
     config: Arc<ServiceConfig>,
     trigger_active: bool,
     storage_detail: StorageDetail,
+    turnning_off: bool,
 }
 
 impl CameraController {
@@ -52,10 +54,15 @@ impl CameraController {
             config,
             trigger_active: false,
             storage_detail: Default::default(),
+            turnning_off: false,
         }
     }
 
     pub fn periodic(&mut self) -> (Vec<ClientMessage>, Vec<IoMessage>) {
+        if self.turnning_off {
+            return (vec![], vec![])
+        }
+
         let old_state = self.state;
 
         self.state = match self.state {
@@ -157,6 +164,17 @@ impl CameraController {
         if let Some(ref mut camera) = self.connected {
             camera.update_trigger_status(value);
         }
+    }
+
+    pub fn turn_off(&mut self) {
+        if let Some(ref mut camera) = self.connected {
+            camera.turn_off();
+        }
+
+        self.turnning_off = true;
+        info!("Abort requested, executing abort.");
+        execute_command(&self.config.turn_off_command);
+        std::process::abort();
     }
 }
 

@@ -10,6 +10,7 @@ use directories::ProjectDirs;
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct ServiceConfig {
     pub storage: String,
+    pub turn_off_command: String,
     pub render_size: ImgSize,
     pub gui: GuiConfig,
     pub io: IoConfig,
@@ -22,6 +23,7 @@ impl Default for ServiceConfig {
             render_size: ImgSize::new(900, 600),
             gui: Default::default(),
             io: Default::default(),
+            turn_off_command: String::new(),
         }
     }
 }

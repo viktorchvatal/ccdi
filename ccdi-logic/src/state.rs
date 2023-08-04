@@ -81,6 +81,10 @@ impl BackendState {
                 self.camera.update_storage_detail(detail);
                 self.return_view()
             },
+            PowerOff => {
+                self.camera.turn_off();
+                BackendResult::empty()
+            },
         })
     }
 

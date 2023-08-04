@@ -20,6 +20,7 @@ use selectors::composition::CompositionDetail;
 use selectors::picture::Picture;
 use selectors::rendering::RenderingSelector;
 
+use crate::components::system::System;
 use crate::selectors::float::FloatSelector;
 use crate::selectors::shooting::ShootingDetail;
 
@@ -65,6 +66,7 @@ impl Main {
             MenuItem::Info => html!{
                 <CameraDetail data={self.view_state.camera_properties.clone()} />
             },
+            MenuItem::System => self.render_system(ctx),
         }
     }
 
@@ -161,6 +163,15 @@ impl Main {
                     camera_params={self.view_state.camera_params.clone()}
                 />
             </div>
+        }
+    }
+
+    fn render_system(&self, ctx: &Context<Self>) -> Html {
+        let action = ctx.link()
+            .callback(|action: StateMessage| Msg::SendMessage(action));
+
+        html!{
+            <System on_action={action.clone()}/>
         }
     }
 

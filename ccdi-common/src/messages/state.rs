@@ -16,6 +16,7 @@ pub enum StateMessage {
     TriggerValueChanged(bool),
     StorageMessage(StorageMessage),
     UpdateStorageDetail(StorageDetail),
+    PowerOff,
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]

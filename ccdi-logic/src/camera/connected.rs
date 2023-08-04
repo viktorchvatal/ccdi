@@ -82,4 +82,8 @@ impl ConnectedCameraController {
     pub fn update_trigger_status(&mut self, value: bool) {
         self.exposure.update_trigger_status(value);
     }
+
+    pub fn turn_off(&mut self) {
+        self.device.close();
+    }
 }

@@ -37,7 +37,7 @@ fn render_plot_to_buffer(
         .map_err(to_string)?;
 
     chart.draw_series(
-        LineSeries::new(histogram_to_points(&stats.r), &RED)
+        LineSeries::new(histogram_to_points(&stats.b), &RGBColor(0, 100, 255))
     ).map_err(to_string)?;
 
     chart.draw_series(
@@ -45,7 +45,7 @@ fn render_plot_to_buffer(
     ).map_err(to_string)?;
 
     chart.draw_series(
-        LineSeries::new(histogram_to_points(&stats.b), &RGBColor(0, 100, 255))
+        LineSeries::new(histogram_to_points(&stats.r), &RED)
     ).map_err(to_string)?;
 
     Ok(())
