@@ -1,8 +1,21 @@
-use std::{path::Path, fs::File, io::{BufReader, Read, BufWriter, Write}};
+use std::{path::Path, fs::{File, OpenOptions}, io::{BufReader, Read, BufWriter, Write}};
 
 use crate::to_string;
 
 // ============================================ PUBLIC =============================================
+
+pub fn append_to_file(
+    data: &str, path: &Path
+) -> Result<(), String> {
+    let mut file = OpenOptions::new()
+        .write(true)
+        .append(true)
+        .open(path)
+        .map_err(to_string)?;
+
+    file.write_all(data.as_bytes()).map_err(to_string)?;
+    Ok(())
+}
 
 pub fn save_text_file(
     data: &str, path: &Path

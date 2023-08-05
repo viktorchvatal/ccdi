@@ -1,7 +1,7 @@
 
 use std::path::{PathBuf, Path};
 
-use ccdi_common::save_text_file;
+use ccdi_common::append_to_file;
 
 // ============================================ PUBLIC =============================================
 
@@ -12,7 +12,7 @@ pub struct ProgrammableOutput {
 }
 
 pub fn write_output(path: &Path, value: bool) -> Result<(), String> {
-    save_text_file(
+    append_to_file(
         match value {
             false => "0\n",
             true => "1\n",

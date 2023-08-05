@@ -2,7 +2,7 @@
 
 use std::{env::args, path::{PathBuf, Path}, thread, time::Duration};
 
-use ccdi_common::{save_text_file, log_err};
+use ccdi_common::{log_err, append_to_file};
 
 fn main() {
     let path = match args().skip(1).next() {
@@ -28,7 +28,7 @@ fn main() {
 }
 
 pub fn write_output(path: &Path, value: bool) -> Result<(), String> {
-    save_text_file(
+    append_to_file(
         match value {
             false => "0\n",
             true => "1\n",
