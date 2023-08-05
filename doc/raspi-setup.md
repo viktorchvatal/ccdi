@@ -45,3 +45,6 @@ Graphical:
 
 `sudo apt install supervisor`
 
+## Add user to gpio group
+
+`sudo usermod -a -G gpio vchvatal`

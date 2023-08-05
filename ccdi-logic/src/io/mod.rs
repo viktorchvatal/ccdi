@@ -1,7 +1,7 @@
 use std::path::{PathBuf, Path};
 
-use ccdi_common::{IoMessage, StateMessage, read_text_file};
-use log::debug;
+use ccdi_common::{IoMessage, StateMessage, read_text_file, log_err};
+use log::{debug, warn};
 
 use crate::IoConfig;
 
@@ -47,8 +47,8 @@ impl IoManager {
     }
 
     pub fn periodic_tasks(&mut self) -> Result<Vec<StateMessage>, String> {
-        let _ = self.heating_pwm.iterate();
-        let _ = self.main_status.iterate();
+        let _ = log_err("Set PWM", self.heating_pwm.iterate());
+        let _ = log_err("Set Status", self.main_status.iterate());
 
         let prev_input = self.last_trigger_value;
         let actual_input = read_input(&self.trigger_input_path);
@@ -78,7 +78,10 @@ fn read_input(path: &Path) -> Option<bool> {
         .map(|string| string.chars().nth(0).unwrap_or(' '));
 
     match first_char {
-        Err(_) => None,
+        Err(error) => {
+            warn!("Cannot read status from: {:?} {:?}", error, path);
+            None
+        },
         Ok('0') => Some(true),
         Ok('1') => Some(false),
         Ok(other) => {
