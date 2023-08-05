@@ -21,12 +21,15 @@ pub struct IoManager {
 
 impl IoManager {
     pub fn new(config: &IoConfig) -> Self {
+        let mut main_status = ProgrammableOutput::new(&config.main_status);
+        main_status.set_pattern(status_healthy());
+
         Self {
             last_trigger_value: None,
             trigger_input_path: PathBuf::from(config.trigger_input.clone()),
             exposure_status_path: PathBuf::from(config.exposure_status.clone()),
             heating_pwm: ProgrammableOutput::new(&config.heating_pwm),
-            main_status: ProgrammableOutput::new(&config.main_status),
+            main_status,
         }
     }
 
