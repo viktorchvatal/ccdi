@@ -17,13 +17,20 @@ Service
  - running on a PC or Raspberry PI
  - allowing standalone batch imaging
 
-## ToDo
-
- - histograms
- - computer power off via web app
- - camera temperature graph
-
 ## Stage of the Project
+
+Project is almost ready for first field test, following features are already implemented:
+ - camera image preview (full, center 1:1 and corners 1:1)
+ - setting camera gain and exposure time
+ - camera cooling
+ - external PWM-controlled output for telescope heating
+ - histograms for RGB channels
+ - saving series of FITS files on the disk/memory card
+ - software power off of the device
+ - external input (trigger) for auto guider / remote control
+ - status LEDs
+
+ ## Images
 
 Working proof of concept - the following image shows CCD camera powered with
 a power bank connected to a Raspberry PI 3 microcomputer running the
@@ -31,6 +38,10 @@ control and web service. Android tablet runs the web interface and is
 already able to take image exposure and present it in the GUI.
 
 ![alt text](doc/images/ccdi-ppc.jpg)
+
+Example gui for image composition, focusing and camera parameters:
+
+![alt text](doc/images/ccdi-composition.jpg)
 
 ## Supported platforms
 
