@@ -39,7 +39,8 @@ already able to take image exposure and present it in the GUI.
 
 ![alt text](doc/images/ccdi-ppc.jpg)
 
-Example gui for image composition, focusing and camera parameters:
+Example gui for image composition, focusing and camera parameters (demo mode with
+generated fractal image):
 
 ![alt text](doc/images/ccdi-composition.jpg)
 
@@ -68,7 +69,7 @@ Web service in the repository already contains client WASM binaries compiled
 previously, so it is only needed to build the web service on the target
 platform.
 
-Service build on on Raspberry PI 3 equipped with 1 GB od RAM without problems
+Service compiled on Raspberry PI 3 equipped with 1 GB od RAM without problems
 so i did not bother with crosscompiling it.
 
 To run the web service, run:
