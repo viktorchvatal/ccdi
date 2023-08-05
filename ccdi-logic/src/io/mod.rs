@@ -1,7 +1,7 @@
 use std::path::{PathBuf, Path};
 
 use ccdi_common::{IoMessage, StateMessage, read_text_file, log_err};
-use log::{debug, warn};
+use log::{debug, warn, info};
 
 use crate::IoConfig;
 
@@ -36,6 +36,7 @@ impl IoManager {
     pub fn process(&mut self, message: IoMessage) -> Result<Vec<StateMessage>, String> {
         match message {
             IoMessage::SetHeating(value) => {
+                info!("Heating set to {}", value);
                 self.heating_pwm.set_pattern(pattern_pwm(value))
             },
             IoMessage::SetExposureActive(value) => {

@@ -30,9 +30,8 @@ pub fn pattern_pwm(value: f32) -> Vec<bool> {
 }
 
 pub fn status_healthy() -> Vec<bool> {
-    (0..20)
-        .map(|index| if index/5 == 2 || index/2 == 4 { true } else { false })
-        .collect()
+    vec![0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+        .into_iter().map(|value| value > 0).collect()
 }
 
 impl ProgrammableOutput {

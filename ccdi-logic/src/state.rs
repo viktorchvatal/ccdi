@@ -43,8 +43,21 @@ impl BackendState {
                 BackendResult::empty()
             },
             CameraParam(message) => {
+                let heating = match message {
+                    ccdi_common::CameraParamMessage::SetHeatingPwm(value) => Some(value),
+                    _ => None
+                };
+
                 self.camera.update_camera_params(message);
-                self.return_view()
+
+                match heating {
+                    None => self.return_view(),
+                    Some(heating) => BackendResult {
+                        client_messages: vec![ClientMessage::View(self.camera.get_view())],
+                        storage_messages: vec![],
+                        io_messages: vec![IoMessage::SetHeating(heating as f32)],
+                    }
+                }
             },
             ExposureMessage(command) => {
                 self.camera.exposure_command(command);
