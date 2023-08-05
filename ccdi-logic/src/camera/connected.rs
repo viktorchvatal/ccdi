@@ -4,6 +4,7 @@ use ccdi_common::{
     ExposureCommand, ClientMessage, ConnectionState, ProcessMessage, CameraParams, StorageMessage
 };
 use ccdi_imager_interface::{ImagerDevice, ImagerProperties, TemperatureRequest};
+use nanocv::ImgSize;
 
 use super::{properties::PropertiesController, exposure::ExposureController};
 
@@ -20,13 +21,14 @@ pub struct ConnectedCameraController {
 impl ConnectedCameraController {
     pub fn new(
         mut device: Box<dyn ImagerDevice>,
+        render_size: ImgSize,
         process_tx: Sender<ProcessMessage>,
         storage_tx: Sender<StorageMessage>,
     ) -> Result<Self, String> {
         let properties = PropertiesController::new(device.as_mut())?;
 
         let exposure = ExposureController::new(
-            properties.get_properties().basic, process_tx, storage_tx
+            render_size, properties.get_properties().basic, process_tx, storage_tx
         );
 
         let last_temperature_set = None;

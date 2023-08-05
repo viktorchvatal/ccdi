@@ -11,19 +11,21 @@ body {
 
 button {
   background-color: #000099;
-  border: 3px   solid #0000CC;
+  border: 2px solid #0000CC;
   border-radius: .70rem;
   color: white;
-  padding: 5px;
+  padding: 2px;
+  padding-top: 4px;
+  padding-bottom: 4px;
   text-align: center;
-  font-size: 16px;
+  font-size: 15px;
   margin: 2px 2px;
-  width: 130px;
+  width: 100px;
   font-weight: bold;
 }
 
 .short-button {
-  width: 55px;
+  width: 52px;
 }
 
 .button-selected, .button-selected:hover {
@@ -114,7 +116,7 @@ footer {
 .div-table-col {
   float: left;
   display: table-cell;
-  width: 180px;
+  width: 160px;
   background-color: #333333;
   padding: 2px;
 }

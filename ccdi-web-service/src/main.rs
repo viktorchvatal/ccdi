@@ -17,6 +17,7 @@ use ccdi_logic::start_logic_thread;
 use ccdi_logic::start_process_thread;
 use ccdi_logic::start_storage_thread;
 use config::ServiceConfig;
+use log::debug;
 use logger::init_logger;
 use static_files::static_files_rules;
 use tokio::sync::mpsc;
@@ -54,6 +55,8 @@ fn main() {
             return;
         }
     };
+
+    debug!("Current config: {:?}", config);
 
     let (server_tx, server_rx) = std::sync::mpsc::channel::<StateMessage>();
     let (clients_tx, clients_rx) = std::sync::mpsc::channel::<ClientMessage>();

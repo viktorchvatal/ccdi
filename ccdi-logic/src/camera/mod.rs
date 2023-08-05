@@ -238,7 +238,7 @@ impl CameraController {
                 self.set_detail("Device connected, reading basic info");
 
                 match ConnectedCameraController::new(
-                    device, self.process_tx.clone(), self.storage_tx.clone()
+                    device, self.config.render_size, self.process_tx.clone(), self.storage_tx.clone()
                 ) {
                     Ok(connected) => {
                         self.set_detail("Camera initialized");

@@ -7,6 +7,7 @@ use ccdi_common::{
 };
 use ccdi_imager_interface::{BasicProperties, ImagerDevice, ExposureParams, ExposureArea};
 use log::debug;
+use nanocv::ImgSize;
 
 // ============================================ PUBLIC =============================================
 
@@ -21,13 +22,14 @@ pub struct ExposureController {
 
 impl ExposureController {
     pub fn new(
+        render_size: ImgSize,
         properties: BasicProperties,
         process_tx: Sender<ProcessMessage>,
         storage_tx: Sender<StorageMessage>,
     ) -> Self {
         Self {
             properties,
-            camera_params: Default::default(),
+            camera_params: CameraParams::new(render_size),
             current_exposure: None,
             process_tx,
             storage_tx,
