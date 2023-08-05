@@ -30,7 +30,7 @@ pub fn pattern_pwm(value: f32) -> Vec<bool> {
 }
 
 pub fn status_healthy() -> Vec<bool> {
-    vec![0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+    vec![0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         .into_iter().map(|value| value > 0).collect()
 }
 
