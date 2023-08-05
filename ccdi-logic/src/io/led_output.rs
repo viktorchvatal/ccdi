@@ -14,8 +14,8 @@ pub struct ProgrammableOutput {
 pub fn write_output(path: &Path, value: bool) -> Result<(), String> {
     save_text_file(
         match value {
-            false => "0",
-            true => "1",
+            false => "0\n",
+            true => "1\n",
         },
         path
     )
