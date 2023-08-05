@@ -143,7 +143,7 @@ pub fn start_io_thread(
             };
 
             loop {
-                match storage_rx.recv_timeout(Duration::from_millis(50)) {
+                match storage_rx.recv_timeout(Duration::from_millis(20)) {
                     // Process the received message
                     Ok(message) => send_results(io.process(message)),
                     // Last sender disconnected - exit thread
