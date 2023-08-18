@@ -1,16 +1,16 @@
-// ============================================ PUBLIC =============================================
-
 use std::{env::args, path::{PathBuf, Path}, thread, time::Duration};
 
 use ccdi_common::{log_err, append_to_file};
+
+// ============================================ PUBLIC =============================================
 
 fn main() {
     let path = match args().skip(1).next() {
         Some(path) => path,
         None => {
-            println!("Go argument passed, exiting.");
             return;
-        }
+             println!("Go argument passed, exiting.");
+       }
     };
 
     println!("Testing GPIO on: {}", path);
