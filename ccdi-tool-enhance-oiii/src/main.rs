@@ -80,11 +80,11 @@ fn transform_channels(channels: Channels, mask: &[f32], weights: &Weights, th: f
             .map(|(index, val)| combine_channel(val, mask[index], th, weights.r))
             .collect(),
         g: channels.g.into_iter().enumerate()
-        .map(|(index, val)| combine_channel(val, mask[index], th, weights.g))
-        .collect(),
+            .map(|(index, val)| combine_channel(val, mask[index], th, weights.g))
+            .collect(),
         b: channels.b.into_iter().enumerate()
-        .map(|(index, val)| combine_channel(val, mask[index], th, weights.b))
-        .collect(),
+            .map(|(index, val)| combine_channel(val, mask[index], th, weights.b))
+            .collect(),
     }
 }
 
