@@ -8,8 +8,8 @@ fn main() {
     let path = match args().skip(1).next() {
         Some(path) => path,
         None => {
+            println!("No argument passed, exiting.");
             return;
-             println!("Go argument passed, exiting.");
        }
     };
 
