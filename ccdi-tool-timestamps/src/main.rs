@@ -8,9 +8,9 @@ use itertools::Itertools;
 // ============================================ PUBLIC =============================================
 
 fn main() -> Result<(), String> {
-    let src = "/home/vchvatal/astro/2023-08-17-mae/C2020-V2-ZTF-g4k-60s-m15c/workspace/lights-time";
+    let src = "/home/vchvatal/astro/2023-12-14-teide-2/62p-tsuchinshan-g4k-60s-m15c/workspace/lights";
 
-    let start_time = match Utc.with_ymd_and_hms(2023, 08, 18, 1, 45, 0) {
+    let start_time = match Utc.with_ymd_and_hms(2023, 12, 15, 03, 00, 0) {
         chrono::LocalResult::None => return Err(format!("Invalid date time")),
         chrono::LocalResult::Single(result) => result,
         chrono::LocalResult::Ambiguous(_, _) => return Err(format!("Ambigous date time")),

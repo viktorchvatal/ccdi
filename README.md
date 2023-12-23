@@ -2,8 +2,6 @@
 
 This is an attempt to build a standalone imaging service running on
 Raspberry Pi that can be remotely controlled with a web browser.
-Project is in the early stage of development, far from being usable for now,
-however basic proof of concept is already working.
 
 ## Goals
 
