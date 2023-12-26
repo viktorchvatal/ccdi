@@ -2,7 +2,6 @@ use ccdi_common::to_string;
 use clap::{Parser};
 use fits::Channels;
 use fitsio::{FitsFile};
-use itertools::Itertools;
 use log::info;
 
 use crate::{logger::init_logger, fits::{read_channels, save_f32_fits_file}};
@@ -77,7 +76,7 @@ struct Args {
 }
 
 const TH_RAMP: f32 = 0.25;
-const BG_RAMP: f32 = 0.01;
+const BG_RAMP: f32 = 0.05;
 
 fn transform_channels(
     channels: Channels,
@@ -91,13 +90,13 @@ fn transform_channels(
     Channels {
         dimensions: channels.dimensions,
         r: channels.r.into_iter().enumerate()
-            .map(|(id, val)| combine_channel(val, id, luma[id], mask[id], th, bg, weights.r))
+            .map(|(index, val)| combine_channel(val, luma[index], mask[index], th, bg, weights.r))
             .collect(),
         g: channels.g.into_iter().enumerate()
-            .map(|(id, val)| combine_channel(val, id, luma[id], mask[id], th, bg, weights.g))
+            .map(|(index, val)| combine_channel(val, luma[index], mask[index], th, bg, weights.g))
             .collect(),
         b: channels.b.into_iter().enumerate()
-            .map(|(id, val)| combine_channel(val, id, luma[id], mask[id], th, bg, weights.b))
+            .map(|(index, val)| combine_channel(val, luma[index], mask[index], th, bg, weights.b))
             .collect(),
     }
 }
@@ -110,13 +109,13 @@ fn compute_brightness(channels: &Channels) -> Vec<f32> {
         .collect()
 }
 
-fn combine_channel(value: f32, id: usize, luma: f32, mask: f32, th: f32, bg: f32, weight: f32) -> f32 {
+fn combine_channel(value: f32, luma: f32, mask: f32, th: f32, bg: f32, weight: f32) -> f32 {
     if luma < bg + BG_RAMP/2.0 {
         // Pixel is probably background
-        let blend_factor = ((luma - bg - BG_RAMP/2.0)/BG_RAMP).clamp(0.0, 1.0);
+        let blend_factor = ((luma - (bg - BG_RAMP/2.0))/BG_RAMP).clamp(0.0, 1.0);
         luma*(1.0 - blend_factor) + (value*weight)*blend_factor
     } else {
-        let blend_factor = ((mask - th - TH_RAMP/2.0)/TH_RAMP).clamp(0.0, 1.0);
+        let blend_factor = ((mask - (th - TH_RAMP/2.0))/TH_RAMP).clamp(0.0, 1.0);
         value*blend_factor + (value*weight)*(1.0 - blend_factor)
     }
 }
@@ -141,25 +140,5 @@ impl Weights {
             g: self.g/avg,
             b: self.b/avg,
         }
-    }
-}
-
-// ============================================= TEST ==============================================
-
-#[cfg(test)]
-mod tests {
-    use std::assert_eq;
-    use crate::combine_channel;
-
-    #[test]
-    fn test_blend() {
-        for value in 0..=100 {
-            let value = value as f32*10.0;
-            let bg: f32 = 0.08;
-            let th: f32 = 0.60;
-            let result = combine_channel(value, value/4.0, 1.0, th, bg, 1.0);
-            println!("Val: {value}: {result}");
-        }
-        panic!("Fail");
     }
 }

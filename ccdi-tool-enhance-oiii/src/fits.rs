@@ -2,7 +2,6 @@
 
 use ccdi_common::to_string;
 use fitsio::{hdu::{FitsHdu, HduInfo}, FitsFile};
-use log::info;
 
 pub fn read_channels(file: &mut FitsFile) -> Result<Channels, String> {
     let hdu = file.primary_hdu().map_err(to_string)?;
