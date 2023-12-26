@@ -2,6 +2,7 @@ use ccdi_common::to_string;
 use clap::{Parser};
 use fits::Channels;
 use fitsio::{FitsFile};
+use itertools::Itertools;
 use log::info;
 
 use crate::{logger::init_logger, fits::{read_channels, save_f32_fits_file}};
@@ -21,7 +22,7 @@ fn main() -> Result<(), String> {
     let mut mask_fits = FitsFile::open(args.mask).map_err(to_string)?;
 
     let channels = read_channels(&mut input_fits)?;
-    let mask_channels = read_channels(&mut input_fits)?;
+    let mask_channels = read_channels(&mut mask_fits)?;
     let mask = &mask_channels.b;
 
     info!("FITS input loaded, dimensions: {:?}", channels.dimensions);
@@ -30,7 +31,7 @@ fn main() -> Result<(), String> {
     let weights = Weights::new(args.r, args.g, args.b).normalize();
     info!("Normalized weights: {:?}", weights);
 
-    let output = transform_channels(channels, mask, &weights, args.threshold);
+    let output = transform_channels(channels, mask, &weights, args.threshold, args.dark_threshold);
     save_f32_fits_file(output, &args.output)?;
 
     Ok(())
@@ -54,6 +55,10 @@ struct Args {
     #[arg(short, long)]
     threshold: f32,
 
+    /// Background threshold - channels are not changed for pixels with mask under threshold
+    #[arg(short, long)]
+    dark_threshold: f32,
+
     /// Output file path
     #[arg(short, long)]
     output: String,
@@ -71,26 +76,49 @@ struct Args {
     b: f32,
 }
 
-const TH_RAMP: f32 = 0.4;
+const TH_RAMP: f32 = 0.25;
+const BG_RAMP: f32 = 0.01;
 
-fn transform_channels(channels: Channels, mask: &[f32], weights: &Weights, th: f32) -> Channels {
+fn transform_channels(
+    channels: Channels,
+    mask: &[f32],
+    weights: &Weights,
+    th: f32,
+    bg: f32
+) -> Channels {
+    let luma = compute_brightness(&channels);
+
     Channels {
         dimensions: channels.dimensions,
         r: channels.r.into_iter().enumerate()
-            .map(|(index, val)| combine_channel(val, mask[index], th, weights.r))
+            .map(|(id, val)| combine_channel(val, id, luma[id], mask[id], th, bg, weights.r))
             .collect(),
         g: channels.g.into_iter().enumerate()
-            .map(|(index, val)| combine_channel(val, mask[index], th, weights.g))
+            .map(|(id, val)| combine_channel(val, id, luma[id], mask[id], th, bg, weights.g))
             .collect(),
         b: channels.b.into_iter().enumerate()
-            .map(|(index, val)| combine_channel(val, mask[index], th, weights.b))
+            .map(|(id, val)| combine_channel(val, id, luma[id], mask[id], th, bg, weights.b))
             .collect(),
     }
 }
 
-fn combine_channel(value: f32, mask: f32, th: f32, weight: f32) -> f32 {
-    let blend_factor = ((mask - th - TH_RAMP/2.0)/TH_RAMP).clamp(0.0, 1.0);
-    value*blend_factor + (value*weight)*(1.0 - blend_factor)
+fn compute_brightness(channels: &Channels) -> Vec<f32> {
+    channels.r.iter()
+        .zip(channels.g.iter())
+        .zip(channels.b.iter())
+        .map(|((r, g), b)| (r + g + b)/3.0)
+        .collect()
+}
+
+fn combine_channel(value: f32, id: usize, luma: f32, mask: f32, th: f32, bg: f32, weight: f32) -> f32 {
+    if luma < bg + BG_RAMP/2.0 {
+        // Pixel is probably background
+        let blend_factor = ((luma - bg - BG_RAMP/2.0)/BG_RAMP).clamp(0.0, 1.0);
+        luma*(1.0 - blend_factor) + (value*weight)*blend_factor
+    } else {
+        let blend_factor = ((mask - th - TH_RAMP/2.0)/TH_RAMP).clamp(0.0, 1.0);
+        value*blend_factor + (value*weight)*(1.0 - blend_factor)
+    }
 }
 
 /// New weights for RGB channels
@@ -107,11 +135,31 @@ impl Weights {
     }
 
     pub fn normalize(&self) -> Weights {
-        let avg = (self.r + self.g + self.b)/5.0;
+        let avg = (self.r + self.g + self.b)/3.0;
         Weights {
             r: self.r/avg,
             g: self.g/avg,
             b: self.b/avg,
         }
+    }
+}
+
+// ============================================= TEST ==============================================
+
+#[cfg(test)]
+mod tests {
+    use std::assert_eq;
+    use crate::combine_channel;
+
+    #[test]
+    fn test_blend() {
+        for value in 0..=100 {
+            let value = value as f32*10.0;
+            let bg: f32 = 0.08;
+            let th: f32 = 0.60;
+            let result = combine_channel(value, value/4.0, 1.0, th, bg, 1.0);
+            println!("Val: {value}: {result}");
+        }
+        panic!("Fail");
     }
 }
