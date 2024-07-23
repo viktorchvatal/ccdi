@@ -1,11 +1,11 @@
-storage: ~/storage/
-turn_off_command: ""
+storage: /home/vchvatal/storage/
+turn_off_command: "/opt/ccdi/ccdi-shutdown"
 render_size:
-  x: 900
-  y: 600
+  x: 600 
+  y: 400
 gui:
-  histogram_width: 512
-  histogram_height: 100
+  histogram_width: 480 
+  histogram_height: 120 
   cooling:
     buttons:
     - [['-20', -20], ['-15', -15], ['-10', -10], ['-5', -5]]
@@ -25,8 +25,8 @@ gui:
     buttons:
     - [['0', 0], ['1000', 1000], ['2000', 2000], ['3000', 3000], ['4000', 4000], ['4030', 4030]]
 io:
-  trigger_input: /sys/class/gpio/gpio17/value
-  exposure_status: /sys/class/gpio/gpio2/value
-  heating_pwm: /sys/class/gpio/gpio4/value
-  main_status: /sys/class/gpio/gpio3/value
+  trigger_input: /sys/class/gpio/gpio0/value
+  exposure_status: /sys/class/gpio/gpio10/value
+  heating_pwm: /sys/class/gpio/gpio11/value
+  main_status: /sys/class/gpio/gpio9/value
 
