@@ -10,14 +10,15 @@
 #sudo echo "out" > /sys/class/gpio/gpio2/direction
 #sudo echo "in" > /sys/class/gpio/gpio17/direction
 
-echo "10" > /sys/class/gpio/export
-echo "9" > /sys/class/gpio/export
-echo "11" > /sys/class/gpio/export
-echo "0" > /sys/class/gpio/export
+#echo "10" > /sys/class/gpio/export
+#echo "9" > /sys/class/gpio/export
+#echo "11" > /sys/class/gpio/export
+#echo "0" > /sys/class/gpio/export
 
-echo "out" > /sys/class/gpio/gpio11/direction
-echo "out" > /sys/class/gpio/gpio9/direction
-echo "out" > /sys/class/gpio/gpio10/direction
-echo "in" > /sys/class/gpio/gpio0/direction
+#echo "out" > /sys/class/gpio/gpio11/direction
+#echo "out" > /sys/class/gpio/gpio9/direction
+#echo "out" > /sys/class/gpio/gpio10/direction
+#echo "in" > /sys/class/gpio/gpio0/direction
 
+/opt/ccdi/init-gpio
 /opt/ccdi/ccdi-web-service --log /opt/ccdi/ccdi.log --debug
