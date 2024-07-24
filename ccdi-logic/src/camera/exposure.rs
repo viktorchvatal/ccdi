@@ -1,5 +1,5 @@
 
-use std::{mem::swap, sync::{mpsc::Sender, Arc}};
+use std::{mem::swap, sync::{mpsc::Sender, Arc}, time::SystemTime};
 
 use ccdi_common::{
     ExposureCommand, ClientMessage, RawImage, ProcessMessage, ConvertRawImage, log_err,
@@ -124,7 +124,8 @@ impl ExposureController {
                 y: 0,
                 width: self.properties.width,
                 height: self.properties.height
-            }
+            },
+            start_time: SystemTime::now(),
         }
     }
 }

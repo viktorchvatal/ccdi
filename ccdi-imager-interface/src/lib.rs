@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use serde_derive::{Serialize, Deserialize};
 
 // ============================================ PUBLIC =============================================
@@ -54,6 +56,7 @@ pub struct ExposureParams {
     pub gain: u16,
     pub time: f64,
     pub area: ExposureArea,
+    pub start_time: SystemTime,
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
