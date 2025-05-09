@@ -4,7 +4,7 @@ use std::os::raw::c_int;
 
 // ============================================ PUBLIC =============================================
 
-extern {
+extern "C" {
     fn enumerate_usb_callback(arg1: c_int);
     fn get_last_camera_id() -> c_int;
     fn reset_last_camera_id();
