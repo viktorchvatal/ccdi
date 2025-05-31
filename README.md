@@ -79,6 +79,14 @@ cargo run --release
 
 ## Installing Dependencies for Web Client Development
 
+It may be neede to install `wasm-pack`:
+
+`cargo install wasm-pack`
+
+Or `wasm-opt`
+
+`cargo install wasm-opt --locked`
+
 To install the trunk server (dev server for hosting and reloading web service
 upon change), type:
 
@@ -115,3 +123,5 @@ Reload UDEV rules and reconnect the device
 
 Tool to view FITS images: QFitsView - `sudo apt install qfitsview`
 
+New rustc versions had compatibility problems with wasm-opt, finally, I was able to compile
+the client in release with rustc 1.85.1

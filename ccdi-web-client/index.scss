@@ -12,11 +12,11 @@ body {
 button {
   background-color: #000099;
   border: 2px solid #0000CC;
-  border-radius: .70rem;
+  border-radius: .50rem;
   color: white;
   padding: 2px;
-  padding-top: 4px;
-  padding-bottom: 4px;
+  padding-top: 2px;
+  padding-bottom: 2px;
   text-align: center;
   font-size: 15px;
   margin: 2px 2px;
@@ -25,7 +25,7 @@ button {
 }
 
 .short-button {
-  width: 52px;
+  width: 48px;
 }
 
 .button-selected, .button-selected:hover {
@@ -116,7 +116,7 @@ footer {
 .div-table-col {
   float: left;
   display: table-cell;
-  width: 160px;
+  width: 155px;
   background-color: #333333;
   padding: 2px;
 }
@@ -155,6 +155,11 @@ footer {
 
 .image-main {
   display: flex;
+}
+
+.image-element {
+  width: 540px;
+  height: 360px;
 }
 
 .image-tools {

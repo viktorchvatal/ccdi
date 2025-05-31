@@ -132,7 +132,7 @@ fn rgb_image_to_html(image: Option<&RgbImage<u16>>, transform: Transform) -> Htm
     match image.and_then(|image| rgb_to_jpeg_base64(image, transform)) {
         None => html! { },
         Some(ref base64) => html! {
-            <img src={format!("data:image/bmp;base64,{}", base64)} />
+            <img class="image-element" src={format!("data:image/bmp;base64,{}", base64)} />
         }
     }
 }
