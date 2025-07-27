@@ -56,13 +56,15 @@ fn to_8bit(transform: Transform, input: i32) -> u8 {
             min(255, max(0, input - transform.sub)*transform.gain >> 8) as u8
         },
         TransformFunction::Sqrt => {
-            let input = (input - transform.sub) as f32;
+            let sqr_sub = transform.sub + transform.sub/4;
+            let input = (max(0, input - sqr_sub)) as f32;
             let root = (input.sqrt()*255.0) as i32;
             min(255, max(0, root)*transform.gain >> 8) as u8
         },
         TransformFunction::Log2 => {
-            let input = (input - transform.sub) as f32;
-            let root = (input.log2()*4096.0) as i32 - 15000;
+            let log_sub = transform.sub + transform.sub/3;
+            let input = (max(1, input - log_sub)) as f32;
+            let root = (input.log2()*1000.0) as i32;
             min(255, max(0, root)*transform.gain >> 8) as u8
         },
     }

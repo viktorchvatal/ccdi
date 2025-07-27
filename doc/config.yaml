@@ -1,11 +1,11 @@
 storage: /home/vchvatal/storage/
 turn_off_command: "/opt/ccdi/ccdi-shutdown"
 render_size:
-  x: 600 
+  x: 600
   y: 400
 gui:
-  histogram_width: 480 
-  histogram_height: 120 
+  histogram_width: 480
+  histogram_height: 120
   cooling:
     buttons:
     - [['-20', -20], ['-15', -15], ['-10', -10], ['-5', -5]]

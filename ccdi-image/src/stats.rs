@@ -36,6 +36,18 @@ impl Histogram {
     }
 }
 
+impl ImageStats {
+    pub fn min_pixel_value(&self) -> u16 {
+        let (r, g, b) = (self.r.min, self.g.min, self.b.min);
+        r.min(g.min(b))
+    }
+
+    pub fn abg_min_pixel_value(&self) -> u16 {
+        let (r, g, b) = (self.r.min, self.g.min, self.b.min);
+        (r + g + b)/3
+    }
+}
+
 pub fn compute_image_stats(image: &RgbImage<u16>, size: usize) -> ImageStats {
     let r = compute_histogram(image.red(), size, compute_channel_stats(image.red()));
     let g = compute_histogram(image.green(), size, compute_channel_stats(image.green()));

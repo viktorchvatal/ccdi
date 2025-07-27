@@ -49,15 +49,17 @@ impl Component for Picture {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let transform = Transform {
-            gain: self.gain,
-            function: self.function,
-            sub: 500
-        };
-
         let hist_w = ctx.props().hist_width;
         let hist_h = ctx.props().hist_height;
         let stats = ctx.props().image.as_deref().map(|img| compute_image_stats(img, hist_w));
+
+        let transform = Transform {
+            gain: self.gain,
+            function: self.function,
+            sub: stats.as_ref().map(|stats| stats.abg_min_pixel_value() as i32).unwrap_or(500)
+        };
+
+        ::gloo::console::info!(format!("Current sub value: {}", transform.sub));
 
         html! {
             <div>
