@@ -56,6 +56,8 @@ impl Component for System {
                 <p>{"Commands"}</p>
                 <button onclick={show_confirm()}>{"Power Off ?"}</button>
                 {confirmation_button}
+                <br/>
+                <p>{"2025-07-27"}</p>
             </div>
         }
     }
